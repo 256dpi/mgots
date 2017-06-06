@@ -10,7 +10,7 @@ import (
 
 func Example() {
 	// connect to database
-	sess, err := mgo.Dial("mongodb://localhost/mgots-test")
+	sess, err := mgo.Dial("mongodb://localhost/mgots")
 	if err != nil {
 		panic(err)
 	}

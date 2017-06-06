@@ -9,7 +9,7 @@ var db *mgo.Database
 
 func init() {
 	// create session
-	sess, err := mgo.Dial("mongodb://localhost/mgots-test")
+	sess, err := mgo.Dial("mongodb://localhost/mgots")
 	if err != nil {
 		panic(err)
 	}
@@ -24,9 +24,8 @@ func init() {
 	}
 
 	// force recreation
-	err = db.C("foo").Insert(bson.M{"foo":"bar"})
+	err = db.C("foo").Insert(bson.M{"foo": "bar"})
 	if err != nil {
 		panic(err)
 	}
 }
-

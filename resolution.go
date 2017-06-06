@@ -6,14 +6,14 @@ import (
 )
 
 // Resolution defines the granularity of the saved metrics.
-type Resolution int
+type Resolution string
 
 const (
-	Second Resolution = iota
-	Minute
-	Hour
-	Day
-	Month
+	Second Resolution = "s"
+	Minute            = "m"
+	Hour              = "h"
+	Day               = "D"
+	Month             = "M"
 )
 
 func (r Resolution) extractStartAndKey(t time.Time) (time.Time, string) {
