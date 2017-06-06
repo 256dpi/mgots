@@ -184,6 +184,8 @@ func (c *Collection) matchSeries(name string, from, to time.Time, tags bson.M) b
 	return match
 }
 
+// TODO: Support TTL indexes for automatic removal?
+
 func (c *Collection) EnsureIndexes() error {
 	err := c.coll.EnsureIndex(mgo.Index{
 		Key: []string{"name"},
