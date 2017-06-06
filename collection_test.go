@@ -5,24 +5,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/mgo.v2"
 )
-
-var db *mgo.Database
-
-func init() {
-	sess, err := mgo.Dial("mongodb://localhost/mgots-test")
-	if err != nil {
-		panic(err)
-	}
-
-	db = sess.DB("")
-
-	err = db.DropDatabase()
-	if err != nil {
-		panic(err)
-	}
-}
 
 func TestCollectionInsert(t *testing.T) {
 	coll := C(db.C("test1"), Second)
