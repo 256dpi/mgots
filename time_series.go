@@ -10,7 +10,7 @@ import (
 
 // TODO: Add support for median and other statistical functions?
 
-// A Points is a single aggregated point in a TimeSeries.
+// A Point is a single aggregated point in a TimeSeries.
 type Point struct {
 	Timestamp  time.Time
 	Resolution Resolution
