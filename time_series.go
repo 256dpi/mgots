@@ -6,6 +6,10 @@ import (
 	"time"
 )
 
+// TODO: Add support for percentiles.
+
+// TODO: Add support for median and other statistical functions?
+
 // A Points is a single aggregated point in a TimeSeries.
 type Point struct {
 	Timestamp  time.Time

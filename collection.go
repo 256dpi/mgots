@@ -9,6 +9,12 @@ import (
 
 // TODO: Support aggregation for multiple tag combinations.
 
+// TODO: Support querying by fields and tags.
+
+// TODO: Support joining time series?
+
+// TODO: Support some kind of grouping?
+
 // A Collection represents a time series enabled collection.
 type Collection struct {
 	coll *mgo.Collection
@@ -186,6 +192,8 @@ func (c *Collection) matchSeries(name string, from, to time.Time, tags bson.M) b
 }
 
 // TODO: Support TTL indexes for automatic removal?
+
+// TODO: Also index tags?
 
 func (c *Collection) EnsureIndexes() error {
 	err := c.coll.EnsureIndex(mgo.Index{
