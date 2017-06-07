@@ -15,22 +15,11 @@ type Point struct {
 	Total     float64
 }
 
-type pointSorter []Point
-
-func (s pointSorter) Len() int {
-	return len(s)
-}
-
-func (s pointSorter) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s pointSorter) Less(i, j int) bool {
-	return s[i].Timestamp.Before(s[j].Timestamp)
-}
-
 func sortPoints(points []Point) []Point {
-	sort.Sort(pointSorter(points))
+	sort.Slice(points, func(i, j int)bool{
+		return points[i].Timestamp.Before(points[j].Timestamp)
+	})
+
 	return points
 }
 
