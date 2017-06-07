@@ -42,6 +42,7 @@ func (c *Collection) Add(bulk *mgo.Bulk, value float64, timestamp time.Time, tag
 }
 
 func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bson.M) (bson.M, bson.M) {
+	// get batch start and value key
 	start, key := c.res.Split(timestamp)
 
 	return bson.M{
@@ -69,6 +70,7 @@ func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bs
 //
 // Note: This function will operate over full batches of the used resolution.
 func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
+	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
 			"$match": c.batchMatcher(start, end, tags),
@@ -86,12 +88,14 @@ func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
 		},
 	})
 
+	// fetch result
 	var res bson.M
 	err := pipe.One(&res)
 	if err != nil {
 		return 0, err
 	}
 
+	// calculate average
 	avg := res["total"].(float64) / float64(res["num"].(int))
 
 	return avg, nil
@@ -112,6 +116,7 @@ func (c *Collection) Max(start, end time.Time, tags bson.M) (float64, error) {
 }
 
 func (c *Collection) minMax(method string, start, end time.Time, tags bson.M) (float64, error) {
+	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
 			"$match": c.batchMatcher(start, end, tags),
@@ -126,6 +131,7 @@ func (c *Collection) minMax(method string, start, end time.Time, tags bson.M) (f
 		},
 	})
 
+	// fetch result
 	var res bson.M
 	err := pipe.One(&res)
 	if err != nil {
