@@ -9,6 +9,8 @@ import (
 
 // TODO: Add support for median and other statistical functions?
 
+// TODO: Add fill function.
+
 // A Point is a single aggregated point in a TimeSeries.
 type Point struct {
 	Timestamp time.Time
