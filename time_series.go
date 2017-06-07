@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-// A Points is an aggregated point in a TimeSeries.
+// A Points is a single aggregated point in a TimeSeries.
 type Point struct {
 	Timestamp  time.Time
 	Resolution Resolution
