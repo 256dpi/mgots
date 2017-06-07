@@ -31,22 +31,21 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 }
 
 // Insert will write a new point to the collection.
-func (c *Collection) Insert(name string, value float64, timestamp time.Time, tags bson.M) error {
-	_, err := c.coll.Upsert(c.selectAndUpdate(name, value, timestamp, tags))
+func (c *Collection) Insert(value float64, timestamp time.Time, tags bson.M) error {
+	_, err := c.coll.Upsert(c.selectAndUpdate(value, timestamp, tags))
 	return err
 }
 
 // Add will add the insert command to the passed Bulk operation.
-func (c *Collection) Add(bulk *mgo.Bulk, name string, value float64, timestamp time.Time, tags bson.M) {
-	bulk.Upsert(c.selectAndUpdate(name, value, timestamp, tags))
+func (c *Collection) Add(bulk *mgo.Bulk, value float64, timestamp time.Time, tags bson.M) {
+	bulk.Upsert(c.selectAndUpdate(value, timestamp, tags))
 }
 
-func (c *Collection) selectAndUpdate(name string, value float64, timestamp time.Time, tags bson.M) (bson.M, bson.M) {
+func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bson.M) (bson.M, bson.M) {
 	start, key := c.res.Split(timestamp)
 
 	return bson.M{
 			"start": start,
-			"name":  name,
 			"tags":  tags,
 		}, bson.M{
 			"$inc": bson.M{
@@ -69,10 +68,10 @@ func (c *Collection) selectAndUpdate(name string, value float64, timestamp time.
 // Avg returns the average value for the given range.
 //
 // Note: This function will operate over full batches of the used resolution.
-func (c *Collection) Avg(name string, from, to time.Time, tags bson.M) (float64, error) {
+func (c *Collection) Avg(from, to time.Time, tags bson.M) (float64, error) {
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.matchBatches(name, from, to, tags),
+			"$match": c.batchMatcher(from, to, tags),
 		},
 		{
 			"$group": bson.M{
@@ -101,21 +100,21 @@ func (c *Collection) Avg(name string, from, to time.Time, tags bson.M) (float64,
 // Min returns the minimum value for the given range.
 //
 // Note: This function will operate over full batches of the used resolution.
-func (c *Collection) Min(name string, from, to time.Time, tags bson.M) (float64, error) {
-	return c.minMax("min", name, from, to, tags)
+func (c *Collection) Min(from, to time.Time, tags bson.M) (float64, error) {
+	return c.minMax("min", from, to, tags)
 }
 
 // Max returns the maximum for the given range.
 //
 // Note: This function will operate over full batches of the used resolution.
-func (c *Collection) Max(name string, from, to time.Time, tags bson.M) (float64, error) {
-	return c.minMax("max", name, from, to, tags)
+func (c *Collection) Max(from, to time.Time, tags bson.M) (float64, error) {
+	return c.minMax("max", from, to, tags)
 }
 
-func (c *Collection) minMax(method string, name string, from, to time.Time, tags bson.M) (float64, error) {
+func (c *Collection) minMax(method string, from, to time.Time, tags bson.M) (float64, error) {
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.matchBatches(name, from, to, tags),
+			"$match": c.batchMatcher(from, to, tags),
 		},
 		{
 			"$group": bson.M{
@@ -157,10 +156,10 @@ type Batch struct {
 }
 
 // Fetch will load all points and construct and return a time series.
-func (c *Collection) Fetch(name string, start, end time.Time, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, error) {
 	// load all batches matching in the provided time range
 	var batches []Batch
-	err := c.coll.Find(c.matchBatches(name, start, end, tags)).All(&batches)
+	err := c.coll.Find(c.batchMatcher(start, end, tags)).All(&batches)
 	if err != nil {
 		return nil, err
 	}
@@ -202,18 +201,20 @@ func (c *Collection) Fetch(name string, start, end time.Time, tags bson.M) (*Tim
 	}, nil
 }
 
-func (c *Collection) matchBatches(name string, from, to time.Time, tags bson.M) bson.M {
+func (c *Collection) batchMatcher(from, to time.Time, tags bson.M) bson.M {
+	// get first and last batch start point
 	start, _ := c.res.Split(from)
 	end, _ := c.res.Split(to)
 
+	// create basic matcher
 	match := bson.M{
-		"name": name,
 		"start": bson.M{
 			"$gte": start,
 			"$lte": end,
 		},
 	}
 
+	// add tags
 	for key, value := range tags {
 		match["tags."+key] = value
 	}
@@ -225,16 +226,8 @@ func (c *Collection) matchBatches(name string, from, to time.Time, tags bson.M) 
 
 // EnsureIndexes will ensure that the necessary indexes have been created.
 func (c *Collection) EnsureIndexes() error {
-	// ensure name index
-	err := c.coll.EnsureIndex(mgo.Index{
-		Key: []string{"name"},
-	})
-	if err != nil {
-		return err
-	}
-
 	// ensure start index
-	err = c.coll.EnsureIndex(mgo.Index{
+	err := c.coll.EnsureIndex(mgo.Index{
 		Key: []string{"start"},
 	})
 	if err != nil {
