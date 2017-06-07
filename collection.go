@@ -71,7 +71,7 @@ func (c *Collection) selectAndUpdate(name string, value float64, timestamp time.
 func (c *Collection) Avg(name string, from, to time.Time, tags bson.M) (float64, error) {
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.matchSeries(name, from, to, tags),
+			"$match": c.matchBatches(name, from, to, tags),
 		},
 		{
 			"$group": bson.M{
@@ -114,7 +114,7 @@ func (c *Collection) Max(name string, from, to time.Time, tags bson.M) (float64,
 func (c *Collection) minMax(method string, name string, from, to time.Time, tags bson.M) (float64, error) {
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.matchSeries(name, from, to, tags),
+			"$match": c.matchBatches(name, from, to, tags),
 		},
 		{
 			"$group": bson.M{
@@ -135,33 +135,55 @@ func (c *Collection) minMax(method string, name string, from, to time.Time, tags
 	return res[method].(float64), nil
 }
 
+// A Value is a single value in a Batch.
+type Value struct {
+	Max   float64
+	Min   float64
+	Num   int
+	Total float64
+}
+
+// A Batch is a batch of Values.
+type Batch struct {
+	Name   string
+	Start  time.Time
+	Tags   bson.M
+	Values map[string]Value
+	Max    float64
+	Min    float64
+	Num    int
+	Total  float64
+}
+
 // Fetch will load all points and construct and return a time series.
 func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeSeries, error) {
-	var res []bson.M
-	err := c.coll.Find(c.matchSeries(name, from, to, tags)).All(&res)
+	// load all batches matching in the provided time range
+	var batches []Batch
+	err := c.coll.Find(c.matchBatches(name, from, to, tags)).All(&batches)
 	if err != nil {
 		return nil, err
 	}
 
-	points := make([]Point, 0, c.res.BatchSize()*len(res))
+	// allocated a slice of points
+	points := make([]Point, 0, c.res.BatchSize()*len(batches))
 
-	for _, doc := range res {
-		for key, value := range doc["values"].(bson.M) {
-			m := value.(bson.M)
-			timestamp := c.res.Join(doc["start"].(time.Time), key)
+	// iterate through all batches
+	for _, batch := range batches {
+		// iterate through all values in a batch
+		for key, value := range batch.Values {
+			// get original timestamp of the value
+			timestamp := c.res.Join(batch.Start, key)
 
+			// add point if timestamps is in the requested time range
 			if (timestamp.Equal(from) || timestamp.After(from)) && timestamp.Before(to) {
-				total := m["total"].(float64)
-				num := m["num"].(int)
-
 				points = append(points, Point{
 					Timestamp:  timestamp,
 					Resolution: c.res,
-					Value:      total / float64(num),
-					Min:        m["min"].(float64),
-					Max:        m["max"].(float64),
-					Num:        num,
-					Total:      total,
+					Value:      value.Total / float64(value.Num),
+					Min:        value.Min,
+					Max:        value.Max,
+					Num:        value.Num,
+					Total:      value.Total,
 				})
 			}
 		}
@@ -172,15 +194,15 @@ func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeS
 	}, nil
 }
 
-func (c *Collection) matchSeries(name string, from, to time.Time, tags bson.M) bson.M {
-	_from, _ := c.res.Split(from)
-	_to, _ := c.res.Split(to)
+func (c *Collection) matchBatches(name string, from, to time.Time, tags bson.M) bson.M {
+	start, _ := c.res.Split(from)
+	end, _ := c.res.Split(to)
 
 	match := bson.M{
 		"name": name,
 		"start": bson.M{
-			"$gte": _from,
-			"$lte": _to,
+			"$gte": start,
+			"$lte": end,
 		},
 	}
 
@@ -193,9 +215,9 @@ func (c *Collection) matchSeries(name string, from, to time.Time, tags bson.M) b
 
 // TODO: Support TTL indexes for automatic removal?
 
-// TODO: Also index tags?
-
+// EnsureIndexes will ensure that the necessary indexes have been created.
 func (c *Collection) EnsureIndexes() error {
+	// ensure name index
 	err := c.coll.EnsureIndex(mgo.Index{
 		Key: []string{"name"},
 	})
@@ -203,8 +225,17 @@ func (c *Collection) EnsureIndexes() error {
 		return err
 	}
 
+	// ensure start index
 	err = c.coll.EnsureIndex(mgo.Index{
 		Key: []string{"start"},
+	})
+	if err != nil {
+		return err
+	}
+
+	// ensure tags index
+	err = c.coll.EnsureIndex(mgo.Index{
+		Key: []string{"tags"},
 	})
 	if err != nil {
 		return err
