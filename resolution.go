@@ -57,7 +57,7 @@ func (r Resolution) estimatedPoints() int {
 	case Hour:
 		return 24
 	case Day:
-		return 30
+		return 31
 	}
 
 	panic("invalid resolution")
