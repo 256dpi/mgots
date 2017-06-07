@@ -68,10 +68,10 @@ func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bs
 // Avg returns the average value for the given range.
 //
 // Note: This function will operate over full batches of the used resolution.
-func (c *Collection) Avg(from, to time.Time, tags bson.M) (float64, error) {
+func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.batchMatcher(from, to, tags),
+			"$match": c.batchMatcher(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -100,21 +100,21 @@ func (c *Collection) Avg(from, to time.Time, tags bson.M) (float64, error) {
 // Min returns the minimum value for the given range.
 //
 // Note: This function will operate over full batches of the used resolution.
-func (c *Collection) Min(from, to time.Time, tags bson.M) (float64, error) {
-	return c.minMax("min", from, to, tags)
+func (c *Collection) Min(start, end time.Time, tags bson.M) (float64, error) {
+	return c.minMax("min", start, end, tags)
 }
 
 // Max returns the maximum for the given range.
 //
 // Note: This function will operate over full batches of the used resolution.
-func (c *Collection) Max(from, to time.Time, tags bson.M) (float64, error) {
-	return c.minMax("max", from, to, tags)
+func (c *Collection) Max(start, end time.Time, tags bson.M) (float64, error) {
+	return c.minMax("max", start, end, tags)
 }
 
-func (c *Collection) minMax(method string, from, to time.Time, tags bson.M) (float64, error) {
+func (c *Collection) minMax(method string, start, end time.Time, tags bson.M) (float64, error) {
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.batchMatcher(from, to, tags),
+			"$match": c.batchMatcher(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -201,16 +201,16 @@ func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, erro
 	}, nil
 }
 
-func (c *Collection) batchMatcher(from, to time.Time, tags bson.M) bson.M {
+func (c *Collection) batchMatcher(start, end time.Time, tags bson.M) bson.M {
 	// get first and last batch start point
-	start, _ := c.res.Split(from)
-	end, _ := c.res.Split(to)
+	batchStart, _ := c.res.Split(start)
+	batchEnd, _ := c.res.Split(end)
 
 	// create basic matcher
 	match := bson.M{
 		"start": bson.M{
-			"$gte": start,
-			"$lte": end,
+			"$gte": batchStart,
+			"$lte": batchEnd,
 		},
 	}
 
