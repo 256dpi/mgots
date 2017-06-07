@@ -41,7 +41,7 @@ func (c *Collection) Add(bulk *mgo.Bulk, name string, value float64, timestamp t
 }
 
 func (c *Collection) selectAndUpdate(name string, value float64, timestamp time.Time, tags bson.M) (bson.M, bson.M) {
-	start, key := c.res.extractStartAndKey(timestamp)
+	start, key := c.res.Split(timestamp)
 
 	return bson.M{
 			"start": start,
@@ -143,12 +143,12 @@ func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeS
 		return nil, err
 	}
 
-	points := make([]Point, 0, c.res.estimatedPoints()*len(res))
+	points := make([]Point, 0, c.res.BatchSize()*len(res))
 
 	for _, doc := range res {
 		for key, value := range doc["values"].(bson.M) {
 			m := value.(bson.M)
-			timestamp := c.res.combineStartAndKey(doc["start"].(time.Time), key)
+			timestamp := c.res.Join(doc["start"].(time.Time), key)
 
 			if (timestamp.Equal(from) || timestamp.After(from)) && timestamp.Before(to) {
 				total := m["total"].(float64)
@@ -173,8 +173,8 @@ func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeS
 }
 
 func (c *Collection) matchSeries(name string, from, to time.Time, tags bson.M) bson.M {
-	_from, _ := c.res.extractStartAndKey(from)
-	_to, _ := c.res.extractStartAndKey(to)
+	_from, _ := c.res.Split(from)
+	_to, _ := c.res.Split(to)
 
 	match := bson.M{
 		"name": name,

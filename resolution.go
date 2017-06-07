@@ -9,13 +9,22 @@ import (
 type Resolution string
 
 const (
+	// A resolution in seconds will store 60 values in a document per minute.
 	Second Resolution = "s"
-	Minute            = "m"
-	Hour              = "h"
-	Day               = "d"
+
+	// A resolution in minutes will stored 60 values in a document per hour.
+	Minute = "m"
+
+	// A resolution in hours will store 24 values in a document per day.
+	Hour = "h"
+
+	// A resolution in days will stores 31 values in a document per month.
+	Day = "d"
 )
 
-func (r Resolution) extractStartAndKey(t time.Time) (time.Time, string) {
+// Split will return the beginning of a batch and the key of the value as
+// defined by the given resolution.
+func (r Resolution) Split(t time.Time) (time.Time, string) {
 	switch r {
 	case Second:
 		return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location()), strconv.Itoa(t.Second())
@@ -30,7 +39,9 @@ func (r Resolution) extractStartAndKey(t time.Time) (time.Time, string) {
 	panic("invalid resolution")
 }
 
-func (r Resolution) combineStartAndKey(t time.Time, key string) time.Time {
+// Join will return the timestamp of a single point based on the start of a
+// batch and the key of the value as defined by the given resolution.
+func (r Resolution) Join(start time.Time, key string) time.Time {
 	i, err := strconv.Atoi(key)
 	if err != nil {
 		panic(err)
@@ -38,19 +49,20 @@ func (r Resolution) combineStartAndKey(t time.Time, key string) time.Time {
 
 	switch r {
 	case Second:
-		return t.Add(time.Duration(i) * time.Second)
+		return start.Add(time.Duration(i) * time.Second)
 	case Minute:
-		return t.Add(time.Duration(i) * time.Minute)
+		return start.Add(time.Duration(i) * time.Minute)
 	case Hour:
-		return t.Add(time.Duration(i) * time.Hour)
+		return start.Add(time.Duration(i) * time.Hour)
 	case Day:
-		return t.AddDate(0, 0, i)
+		return start.AddDate(0, 0, i)
 	}
 
 	panic("invalid resolution")
 }
 
-func (r Resolution) estimatedPoints() int {
+// BatchSize will return the amount of points per batch for the given resolution.
+func (r Resolution) BatchSize() int {
 	switch r {
 	case Second, Minute:
 		return 60
