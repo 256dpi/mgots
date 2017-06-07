@@ -16,7 +16,7 @@ type Point struct {
 }
 
 func sortPoints(points []Point) []Point {
-	sort.Slice(points, func(i, j int)bool{
+	sort.Slice(points, func(i, j int) bool {
 		return points[i].Timestamp.Before(points[j].Timestamp)
 	})
 
@@ -27,6 +27,7 @@ type TimeSeries struct {
 	Points []Point
 }
 
+// Avg returns the average value for the given time series.
 func (ts *TimeSeries) Avg() float64 {
 	var total float64
 
@@ -37,6 +38,7 @@ func (ts *TimeSeries) Avg() float64 {
 	return total / float64(len(ts.Points))
 }
 
+// Min returns the minimum value for the given time series.
 func (ts *TimeSeries) Min() float64 {
 	min := ts.Points[0].Value
 
@@ -47,6 +49,7 @@ func (ts *TimeSeries) Min() float64 {
 	return min
 }
 
+// Max returns the maximum value for the given time series.
 func (ts *TimeSeries) Max() float64 {
 	max := ts.Points[0].Value
 
@@ -57,6 +60,7 @@ func (ts *TimeSeries) Max() float64 {
 	return max
 }
 
+// Values returns a list of all values in the given time series.
 func (ts *TimeSeries) Values() []float64 {
 	values := make([]float64, len(ts.Points))
 
@@ -67,6 +71,7 @@ func (ts *TimeSeries) Values() []float64 {
 	return values
 }
 
+// Timestamps returns a list of all timestamps in the given time series.
 func (ts *TimeSeries) Timestamps() []time.Time {
 	timestamps := make([]time.Time, len(ts.Points))
 
