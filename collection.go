@@ -149,12 +149,13 @@ func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeS
 				num := m["num"].(int)
 
 				points = append(points, Point{
-					Timestamp: timestamp,
-					Value:     total / float64(num),
-					Min:       m["min"].(float64),
-					Max:       m["max"].(float64),
-					Num:       num,
-					Total:     total,
+					Timestamp:  timestamp,
+					Resolution: c.res,
+					Value:      total / float64(num),
+					Min:        m["min"].(float64),
+					Max:        m["max"].(float64),
+					Num:        num,
+					Total:      total,
 				})
 			}
 		}

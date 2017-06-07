@@ -6,13 +6,15 @@ import (
 	"time"
 )
 
+// A Points is an aggregated point in a TimeSeries.
 type Point struct {
-	Timestamp time.Time
-	Value     float64
-	Max       float64
-	Min       float64
-	Num       int
-	Total     float64
+	Timestamp  time.Time
+	Resolution Resolution
+	Value      float64
+	Max        float64
+	Min        float64
+	Num        int
+	Total      float64
 }
 
 func sortPoints(points []Point) []Point {
@@ -23,6 +25,7 @@ func sortPoints(points []Point) []Point {
 	return points
 }
 
+// A TimeSeries is a list of points.
 type TimeSeries struct {
 	Points []Point
 }
