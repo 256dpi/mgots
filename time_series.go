@@ -2,7 +2,6 @@ package mgots
 
 import (
 	"math"
-	"sort"
 	"time"
 )
 
@@ -19,14 +18,6 @@ type Point struct {
 	Min        float64
 	Num        int
 	Total      float64
-}
-
-func sortPoints(points []Point) []Point {
-	sort.Slice(points, func(i, j int) bool {
-		return points[i].Timestamp.Before(points[j].Timestamp)
-	})
-
-	return points
 }
 
 // A TimeSeries is a list of points.

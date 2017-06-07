@@ -1,6 +1,7 @@
 package mgots
 
 import (
+	"sort"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -189,9 +190,12 @@ func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeS
 		}
 	}
 
-	return &TimeSeries{
-		Points: sortPoints(points),
-	}, nil
+	// sort points by time
+	sort.Slice(points, func(i, j int) bool {
+		return points[i].Timestamp.Before(points[j].Timestamp)
+	})
+
+	return &TimeSeries{Points: points}, nil
 }
 
 func (c *Collection) matchBatches(name string, from, to time.Time, tags bson.M) bson.M {
