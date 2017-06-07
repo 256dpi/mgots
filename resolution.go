@@ -12,8 +12,7 @@ const (
 	Second Resolution = "s"
 	Minute            = "m"
 	Hour              = "h"
-	Day               = "D"
-	Month             = "M"
+	Day               = "d"
 )
 
 func (r Resolution) extractStartAndKey(t time.Time) (time.Time, string) {
@@ -26,8 +25,6 @@ func (r Resolution) extractStartAndKey(t time.Time) (time.Time, string) {
 		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Hour())
 	case Day:
 		return time.Date(t.Year(), t.Month(), 0, 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Day())
-	case Month:
-		return time.Date(t.Year(), 0, 0, 0, 0, 0, 0, t.Location()), strconv.Itoa(int(t.Month()))
 	}
 
 	panic("invalid resolution")
@@ -48,8 +45,6 @@ func (r Resolution) combineStartAndKey(t time.Time, key string) time.Time {
 		return t.Add(time.Duration(i) * time.Hour)
 	case Day:
 		return t.AddDate(0, 0, i)
-	case Month:
-		return t.AddDate(0, i, 0)
 	}
 
 	panic("invalid resolution")
@@ -63,8 +58,6 @@ func (r Resolution) estimatedPoints() int {
 		return 24
 	case Day:
 		return 30
-	case Month:
-		return 24
 	}
 
 	panic("invalid resolution")
