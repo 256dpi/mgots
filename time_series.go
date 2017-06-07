@@ -11,18 +11,20 @@ import (
 
 // A Point is a single aggregated point in a TimeSeries.
 type Point struct {
-	Timestamp  time.Time
-	Resolution Resolution
-	Value      float64
-	Max        float64
-	Min        float64
-	Num        int
-	Total      float64
+	Timestamp time.Time
+	Value     float64
+	Max       float64
+	Min       float64
+	Num       int
+	Total     float64
 }
 
 // A TimeSeries is a list of points.
 type TimeSeries struct {
-	Points []Point
+	Start      time.Time
+	End        time.Time
+	Points     []Point
+	Resolution Resolution
 }
 
 // Avg returns the average value for the given time series.

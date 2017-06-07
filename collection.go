@@ -157,10 +157,10 @@ type Batch struct {
 }
 
 // Fetch will load all points and construct and return a time series.
-func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) Fetch(name string, start, end time.Time, tags bson.M) (*TimeSeries, error) {
 	// load all batches matching in the provided time range
 	var batches []Batch
-	err := c.coll.Find(c.matchBatches(name, from, to, tags)).All(&batches)
+	err := c.coll.Find(c.matchBatches(name, start, end, tags)).All(&batches)
 	if err != nil {
 		return nil, err
 	}
@@ -176,15 +176,14 @@ func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeS
 			timestamp := c.res.Join(batch.Start, key)
 
 			// add point if timestamps is in the requested time range
-			if (timestamp.Equal(from) || timestamp.After(from)) && timestamp.Before(to) {
+			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
 				points = append(points, Point{
-					Timestamp:  timestamp,
-					Resolution: c.res,
-					Value:      value.Total / float64(value.Num),
-					Min:        value.Min,
-					Max:        value.Max,
-					Num:        value.Num,
-					Total:      value.Total,
+					Timestamp: timestamp,
+					Value:     value.Total / float64(value.Num),
+					Min:       value.Min,
+					Max:       value.Max,
+					Num:       value.Num,
+					Total:     value.Total,
 				})
 			}
 		}
@@ -195,7 +194,12 @@ func (c *Collection) Fetch(name string, from, to time.Time, tags bson.M) (*TimeS
 		return points[i].Timestamp.Before(points[j].Timestamp)
 	})
 
-	return &TimeSeries{Points: points}, nil
+	return &TimeSeries{
+		Start:      start,
+		End:        end,
+		Points:     points,
+		Resolution: c.res,
+	}, nil
 }
 
 func (c *Collection) matchBatches(name string, from, to time.Time, tags bson.M) bson.M {
