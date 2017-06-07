@@ -8,18 +8,16 @@ import (
 // Resolution defines the granularity of the saved metrics.
 type Resolution string
 
+// The following resolutions are available:
+// A resolution in seconds will store 60 values in a document per minute.
+// A resolution in minutes will stored 60 values in a document per hour.
+// A resolution in hours will store 24 values in a document per day.
+// A resolution in days will stores 31 values in a document per month.
 const (
-	// A resolution in seconds will store 60 values in a document per minute.
 	Second Resolution = "s"
-
-	// A resolution in minutes will stored 60 values in a document per hour.
-	Minute = "m"
-
-	// A resolution in hours will store 24 values in a document per day.
-	Hour = "h"
-
-	// A resolution in days will stores 31 values in a document per month.
-	Day = "d"
+	Minute            = "m"
+	Hour              = "h"
+	Day               = "d"
 )
 
 // Split will return the beginning of a batch and the key of the value as
