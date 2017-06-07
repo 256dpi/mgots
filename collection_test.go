@@ -9,7 +9,7 @@ import (
 
 func TestCollectionInsert(t *testing.T) {
 	dbc := db.C("test-coll-insert")
-	tsc := C(dbc, Second)
+	tsc := Wrap(dbc, Second)
 
 	now := time.Now()
 
@@ -29,7 +29,7 @@ func TestCollectionInsert(t *testing.T) {
 
 func TestCollectionAdd(t *testing.T) {
 	dbc := db.C("test-coll-add")
-	tsc := C(dbc, Second)
+	tsc := Wrap(dbc, Second)
 
 	now := time.Now()
 

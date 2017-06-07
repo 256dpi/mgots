@@ -21,8 +21,8 @@ type Collection struct {
 	res  Resolution
 }
 
-// C will wrap a mgo.Collection and return a mgots.Collection.
-func C(coll *mgo.Collection, res Resolution) *Collection {
+// Wrap will take a mgo.Collection and return a mgots.Collection.
+func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 	return &Collection{
 		coll: coll,
 		res:  res,
