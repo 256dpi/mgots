@@ -5,19 +5,12 @@ import (
 	"time"
 )
 
-// TODO: Add support for percentiles.
-
-// TODO: Add support for median and other statistical functions?
-
 // TODO: Add fill function.
 
-// A Point is a single aggregated point in a TimeSeries.
+// A Point is a single aggregated sample in a TimeSeries.
 type Point struct {
+	Sample
 	Timestamp time.Time
-	Max       float64
-	Min       float64
-	Num       int
-	Total     float64
 }
 
 // A TimeSeries is a list of points.
