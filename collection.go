@@ -149,16 +149,13 @@ type Value struct {
 	Total float64
 }
 
-// A Batch is a batch of Values.
+// A Batch is a batch of Values and a Value itself.
 type Batch struct {
+	Value
 	Name   string
 	Start  time.Time
 	Tags   bson.M
 	Values map[string]Value
-	Max    float64
-	Min    float64
-	Num    int
-	Total  float64
 }
 
 // Fetch will load all points and construct and return a time series.
