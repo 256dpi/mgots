@@ -14,7 +14,6 @@ import (
 // A Point is a single aggregated point in a TimeSeries.
 type Point struct {
 	Timestamp time.Time
-	Value     float64
 	Max       float64
 	Min       float64
 	Num       int
@@ -33,7 +32,7 @@ func (ts *TimeSeries) Avg() float64 {
 	var total float64
 
 	for _, p := range ts.Points {
-		total += p.Value
+		total += p.Total / float64(p.Num)
 	}
 
 	return total / float64(len(ts.Points))
@@ -41,10 +40,10 @@ func (ts *TimeSeries) Avg() float64 {
 
 // Min returns the minimum value for the given time series.
 func (ts *TimeSeries) Min() float64 {
-	min := ts.Points[0].Value
+	min := ts.Points[0].Min
 
 	for _, p := range ts.Points {
-		min = math.Min(min, p.Value)
+		min = math.Min(min, p.Min)
 	}
 
 	return min
@@ -52,33 +51,11 @@ func (ts *TimeSeries) Min() float64 {
 
 // Max returns the maximum value for the given time series.
 func (ts *TimeSeries) Max() float64 {
-	max := ts.Points[0].Value
+	max := ts.Points[0].Max
 
 	for _, p := range ts.Points {
-		max = math.Max(max, p.Value)
+		max = math.Max(max, p.Max)
 	}
 
 	return max
-}
-
-// Values returns a list of all values in the given time series.
-func (ts *TimeSeries) Values() []float64 {
-	values := make([]float64, len(ts.Points))
-
-	for i, point := range ts.Points {
-		values[i] = point.Value
-	}
-
-	return values
-}
-
-// Timestamps returns a list of all timestamps in the given time series.
-func (ts *TimeSeries) Timestamps() []time.Time {
-	timestamps := make([]time.Time, len(ts.Points))
-
-	for i, point := range ts.Points {
-		timestamps[i] = point.Timestamp
-	}
-
-	return timestamps
 }

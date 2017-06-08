@@ -181,7 +181,6 @@ func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, erro
 			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
 				points = append(points, Point{
 					Timestamp: timestamp,
-					Value:     sample.Total / float64(sample.Num),
 					Min:       sample.Min,
 					Max:       sample.Max,
 					Num:       sample.Num,

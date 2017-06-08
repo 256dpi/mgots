@@ -76,7 +76,6 @@ func Example() {
 	fmt.Println(timeSeries.Min())
 	fmt.Println(timeSeries.Avg())
 	fmt.Println(timeSeries.Max())
-	fmt.Println(timeSeries.Points[9].Value)
 
 	// Output:
 	// 0
@@ -86,5 +85,4 @@ func Example() {
 	// 11
 	// 31
 	// 51
-	// 20
 }
