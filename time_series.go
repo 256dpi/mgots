@@ -7,7 +7,7 @@ import (
 
 // TODO: Add fill function.
 
-// A Point is a single aggregated sample in a TimeSeries.
+// A Point is a single aggregated sample in a continuous TimeSeries.
 type Point struct {
 	Sample
 	Timestamp time.Time

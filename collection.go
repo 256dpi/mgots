@@ -68,7 +68,7 @@ func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bs
 
 // Avg returns the average value for the given range.
 //
-// Note: This function will operate over full batches of the used resolution.
+// Note: This function will operate over full batches.
 func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
@@ -103,14 +103,14 @@ func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
 
 // Min returns the minimum value for the given range.
 //
-// Note: This function will operate over full batches of the used resolution.
+// Note: This function will operate over full batches.
 func (c *Collection) Min(start, end time.Time, tags bson.M) (float64, error) {
 	return c.minMax("min", start, end, tags)
 }
 
 // Max returns the maximum for the given range.
 //
-// Note: This function will operate over full batches of the used resolution.
+// Note: This function will operate over full batches.
 func (c *Collection) Max(start, end time.Time, tags bson.M) (float64, error) {
 	return c.minMax("max", start, end, tags)
 }
@@ -181,10 +181,7 @@ func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, erro
 			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
 				points = append(points, Point{
 					Timestamp: timestamp,
-					Min:       sample.Min,
-					Max:       sample.Max,
-					Num:       sample.Num,
-					Total:     sample.Total,
+					Sample:    sample,
 				})
 			}
 		}
