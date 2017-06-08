@@ -23,10 +23,9 @@ type Point struct {
 
 // A TimeSeries is a list of points.
 type TimeSeries struct {
-	Start      time.Time
-	End        time.Time
-	Points     []Point
-	Resolution Resolution
+	Start  time.Time
+	End    time.Time
+	Points []Point
 }
 
 // Avg returns the average value for the given time series.

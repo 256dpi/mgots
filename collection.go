@@ -42,7 +42,7 @@ func (c *Collection) Add(bulk *mgo.Bulk, value float64, timestamp time.Time, tag
 }
 
 func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bson.M) (bson.M, bson.M) {
-	// get batch start and value key
+	// get batch start and sample key
 	start, key := c.res.Split(timestamp)
 
 	return bson.M{
@@ -50,17 +50,17 @@ func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bs
 			"tags":  tags,
 		}, bson.M{
 			"$inc": bson.M{
-				"values." + key + ".total": value,
-				"values." + key + ".num":   1,
+				"samples." + key + ".total": value,
+				"samples." + key + ".num":   1,
 				"num":   1,
 				"total": value,
 			},
 			"$max": bson.M{
-				"values." + key + ".max": value,
+				"samples." + key + ".max": value,
 				"max": value,
 			},
 			"$min": bson.M{
-				"values." + key + ".min": value,
+				"samples." + key + ".min": value,
 				"min": value,
 			},
 		}
@@ -141,21 +141,21 @@ func (c *Collection) minMax(method string, start, end time.Time, tags bson.M) (f
 	return res[method].(float64), nil
 }
 
-// A Value is a single value in a Batch.
-type Value struct {
+// A Sample is a single sample in a Batch.
+type Sample struct {
 	Max   float64
 	Min   float64
 	Num   int
 	Total float64
 }
 
-// A Batch is a batch of Values and a Value itself.
+// A Batch is a list of Samples and a Sample itself.
 type Batch struct {
-	Value
-	Name   string
-	Start  time.Time
-	Tags   bson.M
-	Values map[string]Value
+	Sample
+	Name    string
+	Start   time.Time
+	Tags    bson.M
+	Samples map[string]Sample
 }
 
 // Fetch will load all points and construct and return a time series.
@@ -172,20 +172,20 @@ func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, erro
 
 	// iterate through all batches
 	for _, batch := range batches {
-		// iterate through all values in a batch
-		for key, value := range batch.Values {
-			// get original timestamp of the value
+		// iterate through all samples in a batch
+		for key, sample := range batch.Samples {
+			// get original timestamp of the sample
 			timestamp := c.res.Join(batch.Start, key)
 
 			// add point if timestamps is in the requested time range
 			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
 				points = append(points, Point{
 					Timestamp: timestamp,
-					Value:     value.Total / float64(value.Num),
-					Min:       value.Min,
-					Max:       value.Max,
-					Num:       value.Num,
-					Total:     value.Total,
+					Value:     sample.Total / float64(sample.Num),
+					Min:       sample.Min,
+					Max:       sample.Max,
+					Num:       sample.Num,
+					Total:     sample.Total,
 				})
 			}
 		}
@@ -197,10 +197,9 @@ func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, erro
 	})
 
 	return &TimeSeries{
-		Start:      start,
-		End:        end,
-		Points:     points,
-		Resolution: c.res,
+		Start:  start,
+		End:    end,
+		Points: points,
 	}, nil
 }
 
