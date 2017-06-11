@@ -10,7 +10,7 @@ import (
 
 // TODO: Support aggregation for multiple tag combinations.
 
-// TODO: Support querying by fields and tags.
+// TODO: Support querying by samples and tags.
 
 // TODO: Support joining time series?
 
@@ -23,8 +23,8 @@ type Bulk struct {
 }
 
 // Add will add the insert command to the passed Bulk operation.
-func (b *Bulk) Add(timestamp time.Time, fields map[string]float64, tags bson.M) {
-	b.bulk.Upsert(b.coll.selectAndUpdate(timestamp, fields, tags))
+func (b *Bulk) Add(timestamp time.Time, samples map[string]float64, tags bson.M) {
+	b.bulk.Upsert(b.coll.Upsert(timestamp, samples, tags))
 }
 
 // Run will insert the added operations.
@@ -48,8 +48,8 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 }
 
 // Insert will write a new sample to the collection.
-func (c *Collection) Insert(timestamp time.Time, fields map[string]float64, tags bson.M) error {
-	_, err := c.coll.Upsert(c.selectAndUpdate(timestamp, fields, tags))
+func (c *Collection) Insert(timestamp time.Time, samples map[string]float64, tags bson.M) error {
+	_, err := c.coll.Upsert(c.Upsert(timestamp, samples, tags))
 	return err
 }
 
@@ -62,8 +62,10 @@ func (c *Collection) Bulk() *Bulk {
 	return &Bulk{coll: c, bulk: bulk}
 }
 
-func (c *Collection) selectAndUpdate(timestamp time.Time, fields map[string]float64, tags bson.M) (bson.M, bson.M) {
-	// get batch start and sample key
+// Upsert will return the upsert query and document to add the specified samples
+// to a collection.
+func (c *Collection) Upsert(timestamp time.Time, samples map[string]float64, tags bson.M) (bson.M, bson.M) {
+	// get batch start and field key
 	start, key := c.res.Split(timestamp)
 
 	// prepare query
@@ -80,7 +82,7 @@ func (c *Collection) selectAndUpdate(timestamp time.Time, fields map[string]floa
 	}
 
 	// add statements
-	for field, value := range fields {
+	for field, value := range samples {
 		update["$inc"].(bson.M)["samples."+key+"."+field+".total"] = value
 		update["$inc"].(bson.M)["samples."+key+"."+field+".num"] = 1
 		update["$inc"].(bson.M)["total."+field] = value
@@ -177,7 +179,7 @@ type Sample struct {
 	Total float64
 }
 
-// A Map contains multiple samples indexed by fields.
+// A Map contains multiple indexed samples.
 type Map map[string]Sample
 
 // A Batch is a group of samples as saved in the database.
