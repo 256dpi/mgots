@@ -7,46 +7,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBasicResolutionSplit(t *testing.T) {
-	t1, err := time.Parse(time.Stamp, "Jan 11 15:15:15")
+func TestBasicResolution(t *testing.T) {
+	ts, err := time.Parse(time.Stamp, "Jul 15 15:15:15")
 	assert.NoError(t, err)
 
 	table := []struct {
 		r Resolution
-		t time.Time
+		n int
 		s string
 		k string
+		t string
 	}{
-		{r: OneMinuteOf60Seconds, t: t1, s: "Jan 11 15:15:00", k: "15"},
-		{r: OneHourOf60Minutes, t: t1, s: "Jan 11 15:00:00", k: "15"},
-		{r: OneDayOf24Hours, t: t1, s: "Jan 11 00:00:00", k: "15"},
-		{r: OneMonthOfUpTo31Days, t: t1, s: "Jan  1 00:00:00", k: "11"},
-		{r: OneHourOf3600Seconds, t: t1, s: "Jan 11 15:00:00", k: "915"},
-		{r: OneDayOf1440Minutes, t: t1, s: "Jan 11 00:00:00", k: "915"},
+		{r: OneMinuteOf60Seconds, n: 60, s: "Jul 15 15:15:00", k: "15", t: "Jul 15 15:15:15"},
+		{r: OneHourOf60Minutes, n: 60, s: "Jul 15 15:00:00", k: "15", t: "Jul 15 15:15:00"},
+		{r: OneDayOf24Hours, n: 24, s: "Jul 15 00:00:00", k: "15", t: "Jul 15 15:00:00"},
+		{r: OneMonthOfUpTo31Days, n: 31, s: "Jul  1 00:00:00", k: "15", t: "Jul 15 00:00:00"},
+		{r: OneHourOf3600Seconds, n: 3600, s: "Jul 15 15:00:00", k: "915", t: "Jul 15 15:15:15"},
+		{r: OneDayOf1440Minutes, n: 1440, s: "Jul 15 00:00:00", k: "915", t: "Jul 15 15:15:00"},
 	}
 
 	for _, e := range table {
-		start, key := e.r.Split(e.t)
+		assert.Equal(t, e.n, e.r.SetSize())
+
+		start, key := e.r.Split(ts)
 		assert.Equal(t, e.s, start.Format(time.Stamp))
 		assert.Equal(t, e.k, key)
-	}
-}
 
-func TestBasicResolutionJoin(t *testing.T) {
-
-}
-
-func TestBasicResolutionSetSize(t *testing.T) {
-	table := map[Resolution]int{
-		OneMinuteOf60Seconds: 60,
-		OneHourOf60Minutes:   60,
-		OneDayOf24Hours:      24,
-		OneMonthOfUpTo31Days: 31,
-		OneHourOf3600Seconds: 3600,
-		OneDayOf1440Minutes:  1440,
-	}
-
-	for res, size := range table {
-		assert.Equal(t, size, res.SetSize())
+		ts2 := e.r.Join(start, key)
+		assert.Equal(t, e.t, ts2.Format(time.Stamp))
 	}
 }

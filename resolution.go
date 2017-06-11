@@ -55,10 +55,8 @@ func (r BasicResolution) Split(t time.Time) (time.Time, string) {
 // Join will return the timestamp of a single sample based on the start of a
 // set and the key of the sample.
 func (r BasicResolution) Join(start time.Time, key string) time.Time {
-	i, err := strconv.Atoi(key)
-	if err != nil {
-		panic(err)
-	}
+	// convert key to integer
+	i, _ := strconv.Atoi(key)
 
 	switch r {
 	case OneMinuteOf60Seconds:
@@ -68,7 +66,7 @@ func (r BasicResolution) Join(start time.Time, key string) time.Time {
 	case OneDayOf24Hours:
 		return start.Add(time.Duration(i) * time.Hour)
 	case OneMonthOfUpTo31Days:
-		return start.AddDate(0, 0, i)
+		return start.AddDate(0, 0, i-1)
 	case OneHourOf3600Seconds:
 		return start.Add(time.Duration(i) * time.Second)
 	case OneDayOf1440Minutes:
