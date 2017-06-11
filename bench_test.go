@@ -76,7 +76,9 @@ func BenchmarkCollectionInsert(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		err = coll.Insert(float64(i), time.Now(), nil)
+		err = coll.Insert(time.Now(), map[string]float64{
+			"value": float64(i),
+		}, nil)
 		if err != nil {
 			panic(err)
 		}
@@ -98,7 +100,9 @@ func BenchmarkCollectionAdd(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		coll.Add(bulk, float64(i), time.Now(), nil)
+		coll.Add(bulk, time.Now(), map[string]float64{
+			"value": float64(i),
+		}, nil)
 
 		if i%200 == 0 {
 			_, err := bulk.Run()

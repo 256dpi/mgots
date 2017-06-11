@@ -40,30 +40,32 @@ func Example() {
 	from := time.Now()
 	to := time.Now()
 	for i := 0; i <= 60; i++ {
-		coll.Insert(float64(i), to, tags)
+		coll.Insert(to, map[string]float64{
+			"value": float64(i),
+		}, tags)
 		to = to.Add(time.Second)
 	}
 
 	// get avg
-	avg, err := coll.Avg(from, to, tags)
+	avg, err := coll.Avg(from, to, "value", tags)
 	if err != nil {
 		panic(err)
 	}
 
 	// get min
-	min, err := coll.Min(from, to, tags)
+	min, err := coll.Min(from, to, "value", tags)
 	if err != nil {
 		panic(err)
 	}
 
 	// get max
-	max, err := coll.Max(from, to, tags)
+	max, err := coll.Max(from, to, "value", tags)
 	if err != nil {
 		panic(err)
 	}
 
 	// fetch timeSeries
-	timeSeries, err := coll.Fetch(from.Add(10*time.Second), to.Add(-10*time.Second), tags)
+	timeSeries, err := coll.Fetch(from.Add(10*time.Second), to.Add(-10*time.Second), "value", tags)
 	if err != nil {
 		panic(err)
 	}

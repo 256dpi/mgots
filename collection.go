@@ -8,8 +8,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// TODO: Support multiple value fields.
-
 // TODO: Support aggregation for multiple tag combinations.
 
 // TODO: Support querying by fields and tags.
@@ -33,45 +31,52 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 }
 
 // Insert will write a new point to the collection.
-func (c *Collection) Insert(value float64, timestamp time.Time, tags bson.M) error {
-	_, err := c.coll.Upsert(c.selectAndUpdate(value, timestamp, tags))
+func (c *Collection) Insert(timestamp time.Time, fields map[string]float64, tags bson.M) error {
+	_, err := c.coll.Upsert(c.selectAndUpdate(timestamp, fields, tags))
 	return err
 }
 
 // Add will add the insert command to the passed Bulk operation.
-func (c *Collection) Add(bulk *mgo.Bulk, value float64, timestamp time.Time, tags bson.M) {
-	bulk.Upsert(c.selectAndUpdate(value, timestamp, tags))
+func (c *Collection) Add(bulk *mgo.Bulk, timestamp time.Time, fields map[string]float64, tags bson.M) {
+	bulk.Upsert(c.selectAndUpdate(timestamp, fields, tags))
 }
 
-func (c *Collection) selectAndUpdate(value float64, timestamp time.Time, tags bson.M) (bson.M, bson.M) {
+func (c *Collection) selectAndUpdate(timestamp time.Time, fields map[string]float64, tags bson.M) (bson.M, bson.M) {
 	// get batch start and sample key
 	start, key := c.res.Split(timestamp)
 
-	return bson.M{
-			"start": start,
-			"tags":  tags,
-		}, bson.M{
-			"$inc": bson.M{
-				"samples." + key + ".total": value,
-				"samples." + key + ".num":   1,
-				"num":   1,
-				"total": value,
-			},
-			"$max": bson.M{
-				"samples." + key + ".max": value,
-				"max": value,
-			},
-			"$min": bson.M{
-				"samples." + key + ".min": value,
-				"min": value,
-			},
-		}
+	// prepare query
+	query := bson.M{
+		"start": start,
+		"tags":  tags,
+	}
+
+	// prepare update
+	update := bson.M{
+		"$inc": bson.M{},
+		"$max": bson.M{},
+		"$min": bson.M{},
+	}
+
+	// add statements
+	for field, value := range fields {
+		update["$inc"].(bson.M)["samples."+key+"."+field+".total"] = value
+		update["$inc"].(bson.M)["samples."+key+"."+field+".num"] = 1
+		update["$inc"].(bson.M)["total."+field] = value
+		update["$inc"].(bson.M)["num."+field] = 1
+		update["$max"].(bson.M)["samples."+key+"."+field+".max"] = value
+		update["$max"].(bson.M)["max."+field] = value
+		update["$min"].(bson.M)["samples."+key+"."+field+".min"] = value
+		update["$min"].(bson.M)["min."+field] = value
+	}
+
+	return query, update
 }
 
 // Avg returns the average value for the given range.
 //
 // Note: This function will operate over full batches.
-func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
+func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float64, error) {
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
@@ -81,10 +86,10 @@ func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
 			"$group": bson.M{
 				"_id": nil,
 				"num": bson.M{
-					"$sum": "$num",
+					"$sum": "$num." + field,
 				},
 				"total": bson.M{
-					"$sum": "$total",
+					"$sum": "$total." + field,
 				},
 			},
 		},
@@ -106,18 +111,18 @@ func (c *Collection) Avg(start, end time.Time, tags bson.M) (float64, error) {
 // Min returns the minimum value for the given range.
 //
 // Note: This function will operate over full batches.
-func (c *Collection) Min(start, end time.Time, tags bson.M) (float64, error) {
-	return c.minMax("min", start, end, tags)
+func (c *Collection) Min(start, end time.Time, field string, tags bson.M) (float64, error) {
+	return c.minMax("min", start, end, field, tags)
 }
 
 // Max returns the maximum for the given range.
 //
 // Note: This function will operate over full batches.
-func (c *Collection) Max(start, end time.Time, tags bson.M) (float64, error) {
-	return c.minMax("max", start, end, tags)
+func (c *Collection) Max(start, end time.Time, field string, tags bson.M) (float64, error) {
+	return c.minMax("max", start, end, field, tags)
 }
 
-func (c *Collection) minMax(method string, start, end time.Time, tags bson.M) (float64, error) {
+func (c *Collection) minMax(method string, start, end time.Time, field string, tags bson.M) (float64, error) {
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
@@ -127,7 +132,7 @@ func (c *Collection) minMax(method string, start, end time.Time, tags bson.M) (f
 			"$group": bson.M{
 				"_id": nil,
 				method: bson.M{
-					"$" + method: "$" + method,
+					"$" + method: "$" + method + "." + field,
 				},
 			},
 		},
@@ -151,17 +156,20 @@ type Sample struct {
 	Total float64
 }
 
-// A Batch is a list of Samples and a Sample itself.
+// A Map contains multiple samples indexed by fields.
+type Map map[string]Sample
+
+// A Batch is a group of samples as saved in the database.
 type Batch struct {
-	Sample
+	Map
 	Name    string
 	Start   time.Time
 	Tags    bson.M
-	Samples map[string]Sample
+	Samples map[string]Map
 }
 
 // Fetch will load all points and construct and return a time series.
-func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) Fetch(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
 	// load all batches matching in the provided time range
 	var batches []Batch
 	err := c.coll.Find(c.batchMatcher(start, end, tags)).All(&batches)
@@ -183,7 +191,7 @@ func (c *Collection) Fetch(start, end time.Time, tags bson.M) (*TimeSeries, erro
 			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
 				points = append(points, Point{
 					Timestamp: timestamp,
-					Sample:    sample,
+					Sample:    sample[field],
 				})
 			}
 		}

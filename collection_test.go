@@ -13,10 +13,12 @@ func TestCollectionInsert(t *testing.T) {
 
 	now := time.Now()
 
-	err := tsc.Insert(10.0, now, nil)
+	err := tsc.Insert(now, map[string]float64{
+		"value": 10.0,
+	}, nil)
 	assert.NoError(t, err)
 
-	ts, err := tsc.Fetch(now.Add(-1*time.Second), now.Add(1*time.Second), nil)
+	ts, err := tsc.Fetch(now.Add(-1*time.Second), now.Add(1*time.Second), "value", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, now.Truncate(time.Second), ts.Points[0].Timestamp)
 	assert.Equal(t, 10.0, ts.Points[0].Max)
@@ -33,12 +35,14 @@ func TestCollectionAdd(t *testing.T) {
 
 	bulk := dbc.Bulk()
 
-	tsc.Add(bulk, 10.0, now, nil)
+	tsc.Add(bulk, now, map[string]float64{
+		"value": 10.0,
+	}, nil)
 
 	_, err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.Fetch(now.Add(-1*time.Second), now.Add(1*time.Second), nil)
+	ts, err := tsc.Fetch(now.Add(-1*time.Second), now.Add(1*time.Second), "value", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, now.Truncate(time.Second), ts.Points[0].Timestamp)
 	assert.Equal(t, 10.0, ts.Points[0].Max)
