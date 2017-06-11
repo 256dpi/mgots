@@ -46,24 +46,6 @@ func Example() {
 		to = to.Add(time.Second)
 	}
 
-	// get avg
-	avg, err := coll.Avg(from, to, "value", tags)
-	if err != nil {
-		panic(err)
-	}
-
-	// get min
-	min, err := coll.Min(from, to, "value", tags)
-	if err != nil {
-		panic(err)
-	}
-
-	// get max
-	max, err := coll.Max(from, to, "value", tags)
-	if err != nil {
-		panic(err)
-	}
-
 	// get data
 	ts, err := coll.AggregateSamples(from.Add(10*time.Second), to.Add(-10*time.Second), "value", tags)
 	if err != nil {
@@ -71,18 +53,12 @@ func Example() {
 	}
 
 	// print
-	fmt.Println(min)
-	fmt.Println(avg)
-	fmt.Println(max)
 	fmt.Println(len(ts.Samples))
 	fmt.Println(ts.Min())
 	fmt.Println(ts.Avg())
 	fmt.Println(ts.Max())
 
 	// Output:
-	// 0
-	// 30
-	// 60
 	// 41
 	// 11
 	// 31
