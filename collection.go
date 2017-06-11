@@ -89,8 +89,6 @@ func (c *Collection) upsertSample(timestamp time.Time, metrics map[string]float6
 	return query, update
 }
 
-// TODO: Support some kind of additional grouping during aggregation?
-
 // AggregateSamples will aggregate all samples within sets that match the
 // specified time range and tags.
 func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
