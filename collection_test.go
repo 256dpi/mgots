@@ -91,7 +91,71 @@ func TestCollectionAverage(t *testing.T) {
 
 	bulk := tsc.Bulk()
 
-	now := time.Now()
+	now := time.Time{}
+
+	for i := 0; i < 3; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+			"value": float64(i),
+		}, bson.M{
+			"host": "one",
+		})
+	}
+
+	for i := 0; i < 3; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+			"value": float64(10 + i),
+		}, bson.M{
+			"host": "two",
+		})
+	}
+
+	for i := 0; i < 3; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+			"value": float64(20 + i),
+		}, bson.M{
+			"host": "three",
+		})
+	}
+
+	err := bulk.Run()
+	assert.NoError(t, err)
+
+	ts, err := tsc.Aggregate(now, now.Add(2*time.Second), "value", nil)
+	assert.NoError(t, err)
+	assert.JSONEq(t, `{
+		"Start": "0001-01-01T00:00:00Z",
+		"End": "0001-01-01T00:00:02Z",
+		"Samples":[
+			{
+				"Start": "0001-01-01T00:00:00Z",
+				"Max": 20,
+				"Min": 0,
+				"Num": 3,
+				"Total": 30
+			}, {
+				"Start": "0001-01-01T01:00:01+01:00",
+				"Max": 21,
+				"Min": 1,
+				"Num": 3,
+				"Total": 33
+			}, {
+				"Start": "0001-01-01T01:00:02+01:00",
+				"Max": 22,
+				"Min": 2,
+				"Num": 3,
+				"Total": 36
+			}
+		]
+	}`, jsonString(ts))
+}
+
+func TestCollectionMacroAverage(t *testing.T) {
+	dbc := db.C("test-coll-average")
+	tsc := Wrap(dbc, Second)
+
+	bulk := tsc.Bulk()
+
+	now := time.Time{}
 
 	for i := 1; i < 10; i++ {
 		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{

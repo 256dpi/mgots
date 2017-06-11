@@ -33,6 +33,7 @@ func init() {
 }
 
 func jsonString(val interface{}) string {
+	// marshal as json
 	buf, err := json.Marshal(val)
 	if err != nil {
 		panic(err)
