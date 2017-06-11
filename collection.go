@@ -1,7 +1,6 @@
 package mgots
 
 import (
-	"sort"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -15,67 +14,6 @@ import (
 // TODO: Support joining time series?
 
 // TODO: Support some kind of grouping?
-
-// A Sample is a single sample in a Batch.
-type Sample struct {
-	Max   float64
-	Min   float64
-	Num   int
-	Total float64
-}
-
-// A Map contains multiple indexed samples.
-type Map map[string]Sample
-
-// A Batch is a group of samples as saved in the database.
-type Batch struct {
-	Map
-	Name    string
-	Start   time.Time
-	Tags    bson.M
-	Samples map[string]Map
-}
-
-// A List is a list of batches of a specific resolution.
-type List struct {
-	Resolution Resolution
-	Batches    []Batch
-}
-
-// Aggregate will return a time series of samples matching the specified
-// parameters.
-func (l *List) Aggregate(start, end time.Time, field string) *TimeSeries {
-	// allocated a slice of points
-	points := make([]Point, 0, l.Resolution.BatchSize()*len(l.Batches))
-
-	// iterate through all batches
-	for _, batch := range l.Batches {
-		// iterate through all samples in a batch
-		for key, sample := range batch.Samples {
-			// get original timestamp of the sample
-			timestamp := l.Resolution.Join(batch.Start, key)
-
-			// add point if timestamps is in the requested time range
-			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
-				points = append(points, Point{
-					Timestamp: timestamp,
-					Sample:    sample[field],
-				})
-			}
-		}
-	}
-
-	// sort points by time
-	sort.Slice(points, func(i, j int) bool {
-		return points[i].Timestamp.Before(points[j].Timestamp)
-	})
-
-	return &TimeSeries{
-		Start:  start,
-		End:    end,
-		Points: points,
-	}
-}
 
 // A Bulk operation can be used to add multiple samples at once.
 type Bulk struct {
@@ -232,18 +170,79 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 	return res[method].(float64), nil
 }
 
-// Fetch will load all points and construct and return a time series.
-func (c *Collection) Fetch(start, end time.Time, field string, tags bson.M) (*List, error) {
-	// create list
-	list := &List{Resolution: c.res}
+// TODO: Aggregate should handle multiple fields.
 
-	// load all batches matching in the provided time range
-	err := c.coll.Find(c.selector(start, end, tags)).All(&list.Batches)
+// Aggregate will aggregate all samples matching the specified parameters and
+// return a time series.
+func (c *Collection) Aggregate(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
+	// create aggregation pipeline
+	pipeline := []bson.M{
+		// get all matching batches
+		{
+			"$match": c.selector(start, end, tags),
+		},
+		// turn samples into an array
+		{
+			"$addFields": bson.M{
+				"samples": bson.M{"$objectToArray": "$samples"},
+			},
+		},
+		// create a document for each sample
+		{
+			"$unwind": "$samples",
+		},
+		// make the sample the main document
+		{
+			"$replaceRoot": bson.M{"newRoot": "$samples.v"},
+		},
+		// match the exact time range
+		{
+			"$match": bson.M{
+				"start": bson.M{
+					"$gte": start,
+					"$lte": end,
+				},
+			},
+		},
+		// group samples
+		{
+			"$group": bson.M{
+				"_id":   "$start",
+				"max":   bson.M{"$max": "$" + field + ".max"},
+				"min":   bson.M{"$min": "$" + field + ".min"},
+				"num":   bson.M{"$sum": "$" + field + ".num"},
+				"total": bson.M{"$sum": "$" + field + ".total"},
+			},
+		},
+		// finalize layout
+		{
+			"$project": bson.M{
+				"_id":   false,
+				"start": "$_id",
+				"max":   true,
+				"min":   true,
+				"num":   true,
+				"total": true,
+			},
+		},
+		// sort samples
+		{
+			"$sort": bson.M{"start": 1},
+		},
+	}
+
+	// fetch result
+	var samples []Sample
+	err := c.coll.Pipe(pipeline).All(&samples)
 	if err != nil {
 		return nil, err
 	}
 
-	return list, err
+	return &TimeSeries{
+		Start:   start,
+		End:     end,
+		Samples: samples,
+	}, nil
 }
 
 func (c *Collection) selector(start, end time.Time, tags bson.M) bson.M {

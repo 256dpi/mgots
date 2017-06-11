@@ -5,48 +5,74 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/mgo.v2/bson"
 )
 
 func TestCollectionInsert(t *testing.T) {
 	dbc := db.C("test-coll-insert")
 	tsc := Wrap(dbc, Second)
 
-	now := time.Now()
-
-	err := tsc.Insert(now, map[string]float64{
+	err := tsc.Insert(time.Now(), map[string]float64{
 		"value": 10.0,
 	}, nil)
 	assert.NoError(t, err)
 
-	ts, err := tsc.Fetch(now.Add(-1*time.Second), now.Add(1*time.Second), "value", nil)
-	assert.NoError(t, err)
-	assert.Equal(t, now.Truncate(time.Second), ts.Points[0].Timestamp)
-	assert.Equal(t, 10.0, ts.Points[0].Max)
-	assert.Equal(t, 10.0, ts.Points[0].Min)
-	assert.Equal(t, 1, ts.Points[0].Num)
-	assert.Equal(t, 10.0, ts.Points[0].Total)
+	// TODO: Verify data layout.
 }
 
 func TestCollectionAdd(t *testing.T) {
 	dbc := db.C("test-coll-add")
 	tsc := Wrap(dbc, Second)
 
-	now := time.Now()
-
 	bulk := tsc.Bulk()
 
-	bulk.Add(now, map[string]float64{
-		"value": 10.0,
-	}, nil)
+	for i := 1; i < 10; i++ {
+		bulk.Add(time.Now(), map[string]float64{
+			"value": float64(i),
+		}, nil)
+	}
 
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.Fetch(now.Add(-1*time.Second), now.Add(1*time.Second), "value", nil)
+	// TODO: Verify data layout.
+}
+
+func TestCollectionAverage(t *testing.T) {
+	dbc := db.C("test-coll-average")
+	tsc := Wrap(dbc, Second)
+
+	bulk := tsc.Bulk()
+
+	now := time.Now()
+
+	for i := 1; i < 10; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+			"value": float64(i),
+		}, bson.M{
+			"host": "one",
+		})
+	}
+
+	for i := 1; i < 10; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+			"value": float64(10 + i),
+		}, bson.M{
+			"host": "two",
+		})
+	}
+
+	for i := 1; i < 10; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+			"value": float64(20 + i),
+		}, bson.M{
+			"host": "three",
+		})
+	}
+
+	err := bulk.Run()
 	assert.NoError(t, err)
-	assert.Equal(t, now.Truncate(time.Second), ts.Points[0].Timestamp)
-	assert.Equal(t, 10.0, ts.Points[0].Max)
-	assert.Equal(t, 10.0, ts.Points[0].Min)
-	assert.Equal(t, 1, ts.Points[0].Num)
-	assert.Equal(t, 10.0, ts.Points[0].Total)
+
+	_, err = tsc.Aggregate(now, now.Add(10*time.Second), "value", nil)
+	assert.NoError(t, err)
 }

@@ -64,8 +64,8 @@ func Example() {
 		panic(err)
 	}
 
-	// fetch timeSeries
-	timeSeries, err := coll.Fetch(from.Add(10*time.Second), to.Add(-10*time.Second), "value", tags)
+	// get data
+	ts, err := coll.Aggregate(from.Add(10*time.Second), to.Add(-10*time.Second), "value", tags)
 	if err != nil {
 		panic(err)
 	}
@@ -74,10 +74,10 @@ func Example() {
 	fmt.Println(min)
 	fmt.Println(avg)
 	fmt.Println(max)
-	fmt.Println(len(timeSeries.Points))
-	fmt.Println(timeSeries.Min())
-	fmt.Println(timeSeries.Avg())
-	fmt.Println(timeSeries.Max())
+	fmt.Println(len(ts.Samples))
+	fmt.Println(ts.Min())
+	fmt.Println(ts.Avg())
+	fmt.Println(ts.Max())
 
 	// Output:
 	// 0
