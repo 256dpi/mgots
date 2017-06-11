@@ -239,6 +239,56 @@ func (c *Collection) Aggregate(start, end time.Time, field string, tags bson.M) 
 	}, nil
 }
 
+// MacroAggregate will aggregate all batches matching the specified parameters and
+// return a time series.
+func (c *Collection) MacroAggregate(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
+	// create aggregation pipeline
+	pipeline := []bson.M{
+		// get all matching batches
+		{
+			"$match": c.matchBatches(start, end, tags),
+		},
+		// group samples
+		{
+			"$group": bson.M{
+				"_id":   "$start",
+				"max":   bson.M{"$max": "$" + "max." + field},
+				"min":   bson.M{"$min": "$" + "min." + field},
+				"num":   bson.M{"$sum": "$" + "num." + field},
+				"total": bson.M{"$sum": "$" + "total." + field},
+			},
+		},
+		// finalize layout
+		{
+			"$project": bson.M{
+				"_id":   false,
+				"start": "$_id",
+				"max":   true,
+				"min":   true,
+				"num":   true,
+				"total": true,
+			},
+		},
+		// sort samples
+		{
+			"$sort": bson.M{"start": 1},
+		},
+	}
+
+	// fetch result
+	var samples []Sample
+	err := c.coll.Pipe(pipeline).All(&samples)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TimeSeries{
+		Start:   start,
+		End:     end,
+		Samples: samples,
+	}, nil
+}
+
 func (c *Collection) matchBatches(start, end time.Time, tags bson.M) bson.M {
 	// get first and last batch start point
 	batchStart, _ := c.res.Split(start)

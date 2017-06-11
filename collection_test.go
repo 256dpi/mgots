@@ -28,8 +28,8 @@ func TestCollectionInsert(t *testing.T) {
 		"tags": {},
 		"total": { "value": 10 },
 		"max": { "value": 10 },
-		"min": { "value":10 },
-		"num": { "value":1 },
+		"min": { "value": 10 },
+		"num": { "value": 1 },
 		"samples": {
 			"0": {
 				"start":"0001-01-01T00:00:00Z",
@@ -85,8 +85,8 @@ func TestCollectionAdd(t *testing.T) {
 	}]`, jsonString(data))
 }
 
-func TestCollectionAverage(t *testing.T) {
-	dbc := db.C("test-coll-average")
+func TestCollectionAggregate(t *testing.T) {
+	dbc := db.C("test-coll-aggregate")
 	tsc := Wrap(dbc, Second)
 
 	bulk := tsc.Bulk()
@@ -149,32 +149,32 @@ func TestCollectionAverage(t *testing.T) {
 	}`, jsonString(ts))
 }
 
-func TestCollectionMacroAverage(t *testing.T) {
-	dbc := db.C("test-coll-average")
+func TestCollectionMacroAggregate(t *testing.T) {
+	dbc := db.C("test-coll-macro-aggregate")
 	tsc := Wrap(dbc, Second)
 
 	bulk := tsc.Bulk()
 
 	now := time.Time{}
 
-	for i := 1; i < 10; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+	for i := 0; i < 3; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(i),
 		}, bson.M{
 			"host": "one",
 		})
 	}
 
-	for i := 1; i < 10; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+	for i := 0; i < 3; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(10 + i),
 		}, bson.M{
 			"host": "two",
 		})
 	}
 
-	for i := 1; i < 10; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+	for i := 0; i < 3; i++ {
+		bulk.Add(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(20 + i),
 		}, bson.M{
 			"host": "three",
@@ -184,6 +184,31 @@ func TestCollectionMacroAverage(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	_, err = tsc.Aggregate(now, now.Add(10*time.Second), "value", nil)
+	ts, err := tsc.MacroAggregate(now, now.Add(3*time.Minute), "value", nil)
 	assert.NoError(t, err)
+	assert.JSONEq(t, `{
+		"Start": "0001-01-01T00:00:00Z",
+		"End": "0001-01-01T00:03:00Z",
+		"Samples":[
+			{
+				"Start": "0001-01-01T00:00:00Z",
+				"Max": 20,
+				"Min": 0,
+				"Num": 3,
+				"Total": 30
+			}, {
+				"Start": "0001-01-01T01:01:00+01:00",
+				"Max": 21,
+				"Min": 1,
+				"Num": 3,
+				"Total": 33
+			}, {
+				"Start": "0001-01-01T01:02:00+01:00",
+				"Max": 22,
+				"Min": 2,
+				"Num": 3,
+				"Total": 36
+			}
+		]
+	}`, jsonString(ts))
 }
