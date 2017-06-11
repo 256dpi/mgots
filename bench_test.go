@@ -68,7 +68,7 @@ func BenchmarkCollectionInsert(b *testing.B) {
 
 	coll := Wrap(db.C("bench1"), Second)
 
-	err := coll.EnsureIndexes()
+	err := coll.EnsureIndexes(0)
 	if err != nil {
 		panic(err)
 	}
@@ -90,7 +90,7 @@ func BenchmarkCollectionAdd(b *testing.B) {
 
 	coll := Wrap(db.C("bench2"), Second)
 
-	err := coll.EnsureIndexes()
+	err := coll.EnsureIndexes(0)
 	if err != nil {
 		panic(err)
 	}

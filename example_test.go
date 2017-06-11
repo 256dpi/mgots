@@ -28,7 +28,7 @@ func Example() {
 	coll := Wrap(db.C("metrics.hourly"), Second)
 
 	// ensure indexes
-	err = coll.EnsureIndexes()
+	err = coll.EnsureIndexes(0)
 	if err != nil {
 		panic(err)
 	}

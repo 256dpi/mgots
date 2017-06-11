@@ -259,13 +259,14 @@ func (c *Collection) matchSets(start, end time.Time, tags bson.M) bson.M {
 	return match
 }
 
-// TODO: Support TTL indexes for automatic removal?
-
-// EnsureIndexes will ensure that the necessary indexes have been created.
-func (c *Collection) EnsureIndexes() error {
+// EnsureIndexes will ensure that the necessary indexes have been created. If
+// removeAfter is specified, sets are automatically removed when their start
+// timestamp falls behind the specified duration.
+func (c *Collection) EnsureIndexes(removeAfter time.Duration) error {
 	// ensure start index
 	err := c.coll.EnsureIndex(mgo.Index{
-		Key: []string{"start"},
+		Key:         []string{"start"},
+		ExpireAfter: removeAfter,
 	})
 	if err != nil {
 		return err
