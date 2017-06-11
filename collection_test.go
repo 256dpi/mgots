@@ -45,7 +45,7 @@ func TestCollectionInsert(t *testing.T) {
 }
 
 func TestCollectionBulkInsert(t *testing.T) {
-	dbc := db.C("test-coll-add")
+	dbc := db.C("test-coll-bulk-insert")
 	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 	bulk := tsc.Bulk()
 
@@ -86,7 +86,7 @@ func TestCollectionBulkInsert(t *testing.T) {
 }
 
 func TestCollectionAggregateSamples(t *testing.T) {
-	dbc := db.C("test-coll-aggregate")
+	dbc := db.C("test-coll-aggregate-samples")
 	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 
 	bulk := tsc.Bulk()
@@ -97,6 +97,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(i),
 		}, bson.M{
+			"foo":  "bar",
 			"host": "one",
 		})
 	}
@@ -105,6 +106,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(10 + i),
 		}, bson.M{
+			"foo":  "bar",
 			"host": "two",
 		})
 	}
@@ -113,6 +115,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(20 + i),
 		}, bson.M{
+			"foo":  "bar",
 			"host": "three",
 		})
 	}
@@ -120,7 +123,9 @@ func TestCollectionAggregateSamples(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.AggregateSamples(now, now.Add(2*time.Second), []string{"value"}, nil)
+	ts, err := tsc.AggregateSamples(now, now.Add(2*time.Second), []string{"value"}, bson.M{
+		"foo": "bar",
+	})
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
 		"Start": "0001-01-01T00:00:00Z",
@@ -163,7 +168,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 }
 
 func TestCollectionAggregateSets(t *testing.T) {
-	dbc := db.C("test-coll-macro-aggregate")
+	dbc := db.C("test-coll-aggregate-sets")
 	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 
 	bulk := tsc.Bulk()
@@ -174,6 +179,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(i),
 		}, bson.M{
+			"foo":  "bar",
 			"host": "one",
 		})
 	}
@@ -182,6 +188,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(10 + i),
 		}, bson.M{
+			"foo":  "bar",
 			"host": "two",
 		})
 	}
@@ -190,6 +197,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(20 + i),
 		}, bson.M{
+			"foo":  "bar",
 			"host": "three",
 		})
 	}
@@ -197,7 +205,9 @@ func TestCollectionAggregateSets(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.AggregateSets(now, now.Add(3*time.Minute), []string{"value"}, nil)
+	ts, err := tsc.AggregateSets(now, now.Add(3*time.Minute), []string{"value"}, bson.M{
+		"foo": "bar",
+	})
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
 		"Start": "0001-01-01T00:00:00Z",
