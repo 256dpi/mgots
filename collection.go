@@ -16,6 +16,67 @@ import (
 
 // TODO: Support some kind of grouping?
 
+// A Sample is a single sample in a Batch.
+type Sample struct {
+	Max   float64
+	Min   float64
+	Num   int
+	Total float64
+}
+
+// A Map contains multiple indexed samples.
+type Map map[string]Sample
+
+// A Batch is a group of samples as saved in the database.
+type Batch struct {
+	Map
+	Name    string
+	Start   time.Time
+	Tags    bson.M
+	Samples map[string]Map
+}
+
+// A List is a list of batches of a specific resolution.
+type List struct {
+	Resolution Resolution
+	Batches    []Batch
+}
+
+// Aggregate will return a time series of samples matching the specified
+// parameters.
+func (l *List) Aggregate(start, end time.Time, field string) *TimeSeries {
+	// allocated a slice of points
+	points := make([]Point, 0, l.Resolution.BatchSize()*len(l.Batches))
+
+	// iterate through all batches
+	for _, batch := range l.Batches {
+		// iterate through all samples in a batch
+		for key, sample := range batch.Samples {
+			// get original timestamp of the sample
+			timestamp := l.Resolution.Join(batch.Start, key)
+
+			// add point if timestamps is in the requested time range
+			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
+				points = append(points, Point{
+					Timestamp: timestamp,
+					Sample:    sample[field],
+				})
+			}
+		}
+	}
+
+	// sort points by time
+	sort.Slice(points, func(i, j int) bool {
+		return points[i].Timestamp.Before(points[j].Timestamp)
+	})
+
+	return &TimeSeries{
+		Start:  start,
+		End:    end,
+		Points: points,
+	}
+}
+
 // A Bulk operation can be used to add multiple samples at once.
 type Bulk struct {
 	coll *Collection
@@ -24,7 +85,7 @@ type Bulk struct {
 
 // Add will add the insert command to the passed Bulk operation.
 func (b *Bulk) Add(timestamp time.Time, samples map[string]float64, tags bson.M) {
-	b.bulk.Upsert(b.coll.Upsert(timestamp, samples, tags))
+	b.bulk.Upsert(b.coll.upsert(timestamp, samples, tags))
 }
 
 // Run will insert the added operations.
@@ -49,7 +110,7 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 
 // Insert will write a new sample to the collection.
 func (c *Collection) Insert(timestamp time.Time, samples map[string]float64, tags bson.M) error {
-	_, err := c.coll.Upsert(c.Upsert(timestamp, samples, tags))
+	_, err := c.coll.Upsert(c.upsert(timestamp, samples, tags))
 	return err
 }
 
@@ -62,9 +123,7 @@ func (c *Collection) Bulk() *Bulk {
 	return &Bulk{coll: c, bulk: bulk}
 }
 
-// Upsert will return the upsert query and document to add the specified samples
-// to a collection.
-func (c *Collection) Upsert(timestamp time.Time, samples map[string]float64, tags bson.M) (bson.M, bson.M) {
+func (c *Collection) upsert(timestamp time.Time, samples map[string]float64, tags bson.M) (bson.M, bson.M) {
 	// get batch start and field key
 	start, key := c.res.Split(timestamp)
 
@@ -103,7 +162,7 @@ func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.batchMatcher(start, end, tags),
+			"$match": c.selector(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -149,7 +208,7 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.batchMatcher(start, end, tags),
+			"$match": c.selector(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -171,68 +230,21 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 	return res[method].(float64), nil
 }
 
-// A Sample is a single sample in a Batch.
-type Sample struct {
-	Max   float64
-	Min   float64
-	Num   int
-	Total float64
-}
-
-// A Map contains multiple indexed samples.
-type Map map[string]Sample
-
-// A Batch is a group of samples as saved in the database.
-type Batch struct {
-	Map
-	Name    string
-	Start   time.Time
-	Tags    bson.M
-	Samples map[string]Map
-}
-
 // Fetch will load all points and construct and return a time series.
-func (c *Collection) Fetch(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) Fetch(start, end time.Time, field string, tags bson.M) (*List, error) {
+	// create list
+	list := &List{Resolution: c.res}
+
 	// load all batches matching in the provided time range
-	var batches []Batch
-	err := c.coll.Find(c.batchMatcher(start, end, tags)).All(&batches)
+	err := c.coll.Find(c.selector(start, end, tags)).All(&list.Batches)
 	if err != nil {
 		return nil, err
 	}
 
-	// allocated a slice of points
-	points := make([]Point, 0, c.res.BatchSize()*len(batches))
-
-	// iterate through all batches
-	for _, batch := range batches {
-		// iterate through all samples in a batch
-		for key, sample := range batch.Samples {
-			// get original timestamp of the sample
-			timestamp := c.res.Join(batch.Start, key)
-
-			// add point if timestamps is in the requested time range
-			if (timestamp.Equal(start) || timestamp.After(start)) && timestamp.Before(end) {
-				points = append(points, Point{
-					Timestamp: timestamp,
-					Sample:    sample[field],
-				})
-			}
-		}
-	}
-
-	// sort points by time
-	sort.Slice(points, func(i, j int) bool {
-		return points[i].Timestamp.Before(points[j].Timestamp)
-	})
-
-	return &TimeSeries{
-		Start:  start,
-		End:    end,
-		Points: points,
-	}, nil
+	return list, err
 }
 
-func (c *Collection) batchMatcher(start, end time.Time, tags bson.M) bson.M {
+func (c *Collection) selector(start, end time.Time, tags bson.M) bson.M {
 	// get first and last batch start point
 	batchStart, _ := c.res.Split(start)
 	batchEnd, _ := c.res.Split(end)
