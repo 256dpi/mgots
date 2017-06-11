@@ -1,6 +1,8 @@
 package mgots
 
 import (
+	"encoding/json"
+
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -28,4 +30,13 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
+}
+
+func jsonString(val interface{}) string {
+	buf, err := json.Marshal(val)
+	if err != nil {
+		panic(err)
+	}
+
+	return string(buf)
 }
