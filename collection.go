@@ -54,7 +54,7 @@ func (c *Collection) Bulk() *Bulk {
 }
 
 func (c *Collection) upsertSample(timestamp time.Time, samples map[string]float64, tags bson.M) (bson.M, bson.M) {
-	// get batch start and field key
+	// get set start and field key
 	start, key := c.res.Split(timestamp)
 
 	// prepare query
@@ -89,12 +89,12 @@ func (c *Collection) upsertSample(timestamp time.Time, samples map[string]float6
 
 // Avg returns the average value for the given range.
 //
-// Note: This function will operate over full batches.
+// Note: This function will operate over full sets.
 func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float64, error) {
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.matchBatches(start, end, tags),
+			"$match": c.matchSets(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -124,14 +124,14 @@ func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float
 
 // Min returns the minimum value for the given range.
 //
-// Note: This function will operate over full batches.
+// Note: This function will operate over full sets.
 func (c *Collection) Min(start, end time.Time, field string, tags bson.M) (float64, error) {
 	return c.minMax("min", start, end, field, tags)
 }
 
 // Max returns the maximum for the given range.
 //
-// Note: This function will operate over full batches.
+// Note: This function will operate over full sets.
 func (c *Collection) Max(start, end time.Time, field string, tags bson.M) (float64, error) {
 	return c.minMax("max", start, end, field, tags)
 }
@@ -140,7 +140,7 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.matchBatches(start, end, tags),
+			"$match": c.matchSets(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -162,18 +162,18 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 	return res[method].(float64), nil
 }
 
-// TODO: Aggregate should handle multiple fields.
+// TODO: AggregateSamples should handle multiple fields.
 
 // TODO: Support some kind of additional grouping during aggregation?
 
-// Aggregate will aggregate all samples matching the specified parameters and
-// return a time series.
-func (c *Collection) Aggregate(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
+// AggregateSamples will aggregate all samples that match the specified time
+// range and tags.
+func (c *Collection) AggregateSamples(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
 	// create aggregation pipeline
 	pipeline := []bson.M{
-		// get all matching batches
+		// get all matching sets
 		{
-			"$match": c.matchBatches(start, end, tags),
+			"$match": c.matchSets(start, end, tags),
 		},
 		// turn samples into an array
 		{
@@ -239,14 +239,14 @@ func (c *Collection) Aggregate(start, end time.Time, field string, tags bson.M) 
 	}, nil
 }
 
-// MacroAggregate will aggregate all batches matching the specified parameters and
+// AggregateSets will aggregate all sets matching the specified parameters and
 // return a time series.
-func (c *Collection) MacroAggregate(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) AggregateSets(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
 	// create aggregation pipeline
 	pipeline := []bson.M{
-		// get all matching batches
+		// get all matching sets
 		{
-			"$match": c.matchBatches(start, end, tags),
+			"$match": c.matchSets(start, end, tags),
 		},
 		// group samples
 		{
@@ -289,16 +289,16 @@ func (c *Collection) MacroAggregate(start, end time.Time, field string, tags bso
 	}, nil
 }
 
-func (c *Collection) matchBatches(start, end time.Time, tags bson.M) bson.M {
-	// get first and last batch start point
-	batchStart, _ := c.res.Split(start)
-	batchEnd, _ := c.res.Split(end)
+func (c *Collection) matchSets(start, end time.Time, tags bson.M) bson.M {
+	// get first and last set start point
+	setStart, _ := c.res.Split(start)
+	setEnd, _ := c.res.Split(end)
 
 	// create basic matcher
 	match := bson.M{
 		"start": bson.M{
-			"$gte": batchStart,
-			"$lte": batchEnd,
+			"$gte": setStart,
+			"$lte": setEnd,
 		},
 	}
 

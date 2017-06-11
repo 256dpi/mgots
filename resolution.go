@@ -6,17 +6,17 @@ import (
 )
 
 // A Resolution specifies the granularity of saved samples and the organization
-// in batches.
+// in sets.
 type Resolution interface {
-	// Split should return the beginning of a batch and the key of the sample.
+	// Split should return the beginning of a set and the key of the sample.
 	Split(t time.Time) (time.Time, string)
 
 	// Join should return the timestamp of a single sample based on the start of a
-	// batch and the key of the sample.
+	// set and the key of the sample.
 	Join(start time.Time, key string) time.Time
 
-	// BatchSize should return the total amount of samples per batch.
-	BatchSize() int
+	// SetSize should return the total amount of samples per set.
+	SetSize() int
 }
 
 // BasicResolution defines the granularity of the saved metrics.
@@ -34,7 +34,7 @@ const (
 	Day                    = "d"
 )
 
-// Split will return the beginning of a batch and the key of the sample.
+// Split will return the beginning of a set and the key of the sample.
 func (r BasicResolution) Split(t time.Time) (time.Time, string) {
 	switch r {
 	case Second:
@@ -51,7 +51,7 @@ func (r BasicResolution) Split(t time.Time) (time.Time, string) {
 }
 
 // Join will return the timestamp of a single sample based on the start of a
-// batch and the key of the sample.
+// set and the key of the sample.
 func (r BasicResolution) Join(start time.Time, key string) time.Time {
 	i, err := strconv.Atoi(key)
 	if err != nil {
@@ -72,8 +72,8 @@ func (r BasicResolution) Join(start time.Time, key string) time.Time {
 	panic("invalid resolution")
 }
 
-// BatchSize will return the total amount of samples per batch.
-func (r BasicResolution) BatchSize() int {
+// SetSize will return the total amount of samples per set.
+func (r BasicResolution) SetSize() int {
 	switch r {
 	case Second, Minute:
 		return 60

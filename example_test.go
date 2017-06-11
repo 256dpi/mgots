@@ -65,7 +65,7 @@ func Example() {
 	}
 
 	// get data
-	ts, err := coll.Aggregate(from.Add(10*time.Second), to.Add(-10*time.Second), "value", tags)
+	ts, err := coll.AggregateSamples(from.Add(10*time.Second), to.Add(-10*time.Second), "value", tags)
 	if err != nil {
 		panic(err)
 	}

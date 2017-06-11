@@ -120,7 +120,7 @@ func TestCollectionAggregate(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.Aggregate(now, now.Add(2*time.Second), "value", nil)
+	ts, err := tsc.AggregateSamples(now, now.Add(2*time.Second), "value", nil)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
 		"Start": "0001-01-01T00:00:00Z",
@@ -184,7 +184,7 @@ func TestCollectionMacroAggregate(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.MacroAggregate(now, now.Add(3*time.Minute), "value", nil)
+	ts, err := tsc.AggregateSets(now, now.Add(3*time.Minute), "value", nil)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
 		"Start": "0001-01-01T00:00:00Z",
