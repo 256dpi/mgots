@@ -3,32 +3,16 @@ package mgots
 import (
 	"fmt"
 	"time"
-
-	"gopkg.in/mgo.v2"
+	
 	"gopkg.in/mgo.v2/bson"
 )
 
 func Example() {
-	// connect to database
-	sess, err := mgo.Dial("mongodb://localhost/mgots")
-	if err != nil {
-		panic(err)
-	}
-
-	// get db
-	db := sess.DB("")
-
-	// clean database
-	err = db.DropDatabase()
-	if err != nil {
-		panic(err)
-	}
-
 	// get time series collection
 	coll := Wrap(db.C("metrics"), Second)
 
 	// ensure indexes
-	err = coll.EnsureIndexes(0)
+	err := coll.EnsureIndexes(0)
 	if err != nil {
 		panic(err)
 	}
