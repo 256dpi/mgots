@@ -89,13 +89,11 @@ func (c *Collection) upsertSample(timestamp time.Time, metrics map[string]float6
 	return query, update
 }
 
-// TODO: AggregateSamples should handle multiple metrics.
-
 // TODO: Support some kind of additional grouping during aggregation?
 
 // AggregateSamples will aggregate all samples within sets that match the
 // specified time range and tags.
-func (c *Collection) AggregateSamples(start, end time.Time, metric string, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
 	// create aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
@@ -128,28 +126,41 @@ func (c *Collection) AggregateSamples(start, end time.Time, metric string, tags 
 		// group samples
 		{
 			"$group": bson.M{
-				"_id":   "$start",
-				"max":   bson.M{"$max": "$" + metric + ".max"},
-				"min":   bson.M{"$min": "$" + metric + ".min"},
-				"num":   bson.M{"$sum": "$" + metric + ".num"},
-				"total": bson.M{"$sum": "$" + metric + ".total"},
+				"_id": "$start",
+				// more fields added below
 			},
 		},
 		// finalize layout
 		{
 			"$project": bson.M{
-				"_id":   false,
-				"start": "$_id",
-				"max":   true,
-				"min":   true,
-				"num":   true,
-				"total": true,
+				"_id":     false,
+				"start":   "$_id",
+				"metrics": bson.M{
+				// fields added below
+				},
 			},
 		},
 		// sort samples
 		{
 			"$sort": bson.M{"start": 1},
 		},
+	}
+
+	// update pipeline
+	for _, name := range metrics {
+		// add group fields
+		pipeline[5]["$group"].(bson.M)["max_"+name] = bson.M{"$max": "$" + name + ".max"}
+		pipeline[5]["$group"].(bson.M)["min_"+name] = bson.M{"$min": "$" + name + ".min"}
+		pipeline[5]["$group"].(bson.M)["num_"+name] = bson.M{"$sum": "$" + name + ".num"}
+		pipeline[5]["$group"].(bson.M)["total_"+name] = bson.M{"$sum": "$" + name + ".total"}
+
+		// add project fields
+		pipeline[6]["$project"].(bson.M)["metrics"].(bson.M)[name] = bson.M{
+			"max":   "$max_" + name,
+			"min":   "$min_" + name,
+			"num":   "$num_" + name,
+			"total": "$total_" + name,
+		}
 	}
 
 	// fetch result
@@ -168,7 +179,7 @@ func (c *Collection) AggregateSamples(start, end time.Time, metric string, tags 
 
 // AggregateSets will aggregate only set level metrics matching the specified
 // time range and tags.
-func (c *Collection) AggregateSets(start, end time.Time, metric string, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) AggregateSets(start, end time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
 	// create aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
@@ -178,28 +189,49 @@ func (c *Collection) AggregateSets(start, end time.Time, metric string, tags bso
 		// group samples
 		{
 			"$group": bson.M{
-				"_id":   "$start",
-				"max":   bson.M{"$max": "$" + "max." + metric},
-				"min":   bson.M{"$min": "$" + "min." + metric},
-				"num":   bson.M{"$sum": "$" + "num." + metric},
-				"total": bson.M{"$sum": "$" + "total." + metric},
+				"_id": "$start",
+				// more fields added below
+				//"max": bson.M{"$max": "$" + "max." + metric},
+				//"min": bson.M{"$min": "$" + "min." + metric},
+				//"num": bson.M{"$sum": "$" + "num." + metric},
+				//"total": bson.M{"$sum": "$" + "total." + metric},
 			},
 		},
 		// finalize layout
 		{
 			"$project": bson.M{
-				"_id":   false,
-				"start": "$_id",
-				"max":   true,
-				"min":   true,
-				"num":   true,
-				"total": true,
+				"_id":     false,
+				"start":   "$_id",
+				"metrics": bson.M{
+				// fields added below
+				},
+				//"max":   true,
+				//"min":   true,
+				//"num":   true,
+				//"total": true,
 			},
 		},
 		// sort samples
 		{
 			"$sort": bson.M{"start": 1},
 		},
+	}
+
+	// update pipeline
+	for _, name := range metrics {
+		// add group fields
+		pipeline[1]["$group"].(bson.M)["max_"+name] = bson.M{"$max": "$max." + name}
+		pipeline[1]["$group"].(bson.M)["min_"+name] = bson.M{"$min": "$min." + name}
+		pipeline[1]["$group"].(bson.M)["num_"+name] = bson.M{"$sum": "$num." + name}
+		pipeline[1]["$group"].(bson.M)["total_"+name] = bson.M{"$sum": "$total." + name}
+
+		// add project fields
+		pipeline[2]["$project"].(bson.M)["metrics"].(bson.M)[name] = bson.M{
+			"max":   "$max_" + name,
+			"min":   "$min_" + name,
+			"num":   "$num_" + name,
+			"total": "$total_" + name,
+		}
 	}
 
 	// fetch result

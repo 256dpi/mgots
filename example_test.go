@@ -47,16 +47,16 @@ func Example() {
 	}
 
 	// get data
-	ts, err := coll.AggregateSamples(from.Add(10*time.Second), to.Add(-10*time.Second), "value", tags)
+	ts, err := coll.AggregateSamples(from.Add(10*time.Second), to.Add(-10*time.Second), []string{"value"}, tags)
 	if err != nil {
 		panic(err)
 	}
 
 	// print
 	fmt.Println(len(ts.Samples))
-	fmt.Println(ts.Min())
-	fmt.Println(ts.Avg())
-	fmt.Println(ts.Max())
+	fmt.Println(ts.Min("value"))
+	fmt.Println(ts.Avg("value"))
+	fmt.Println(ts.Max("value"))
 
 	// Output:
 	// 41

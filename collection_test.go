@@ -44,7 +44,7 @@ func TestCollectionInsert(t *testing.T) {
 	}]`, jsonString(data))
 }
 
-func TestCollectionAdd(t *testing.T) {
+func TestCollectionBulkInsert(t *testing.T) {
 	dbc := db.C("test-coll-add")
 	tsc := Wrap(dbc, Second)
 	bulk := tsc.Bulk()
@@ -85,7 +85,7 @@ func TestCollectionAdd(t *testing.T) {
 	}]`, jsonString(data))
 }
 
-func TestCollectionAggregate(t *testing.T) {
+func TestCollectionAggregateSamples(t *testing.T) {
 	dbc := db.C("test-coll-aggregate")
 	tsc := Wrap(dbc, Second)
 
@@ -120,7 +120,7 @@ func TestCollectionAggregate(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.AggregateSamples(now, now.Add(2*time.Second), "value", nil)
+	ts, err := tsc.AggregateSamples(now, now.Add(2*time.Second), []string{"value"}, nil)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
 		"Start": "0001-01-01T00:00:00Z",
@@ -128,28 +128,41 @@ func TestCollectionAggregate(t *testing.T) {
 		"Samples":[
 			{
 				"Start": "0001-01-01T00:00:00Z",
-				"Max": 20,
-				"Min": 0,
-				"Num": 3,
-				"Total": 30
+				"Metrics": {
+					"value": {
+						"Max": 20,
+						"Min": 0,
+						"Num": 3,
+						"Total": 30
+					}
+				}
 			}, {
 				"Start": "0001-01-01T01:00:01+01:00",
-				"Max": 21,
-				"Min": 1,
-				"Num": 3,
-				"Total": 33
+				"Metrics": {
+					"value": {
+						"Max": 21,
+						"Min": 1,
+						"Num": 3,
+						"Total": 33
+					}
+				}
 			}, {
 				"Start": "0001-01-01T01:00:02+01:00",
-				"Max": 22,
-				"Min": 2,
-				"Num": 3,
-				"Total": 36
+				"Metrics": {
+					"value": {
+						"Max": 22,
+						"Min": 2,
+						"Num": 3,
+						"Total": 36
+					}
+				}
+
 			}
 		]
 	}`, jsonString(ts))
 }
 
-func TestCollectionMacroAggregate(t *testing.T) {
+func TestCollectionAggregateSets(t *testing.T) {
 	dbc := db.C("test-coll-macro-aggregate")
 	tsc := Wrap(dbc, Second)
 
@@ -184,7 +197,7 @@ func TestCollectionMacroAggregate(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.AggregateSets(now, now.Add(3*time.Minute), "value", nil)
+	ts, err := tsc.AggregateSets(now, now.Add(3*time.Minute), []string{"value"}, nil)
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
 		"Start": "0001-01-01T00:00:00Z",
@@ -192,22 +205,34 @@ func TestCollectionMacroAggregate(t *testing.T) {
 		"Samples":[
 			{
 				"Start": "0001-01-01T00:00:00Z",
-				"Max": 20,
-				"Min": 0,
-				"Num": 3,
-				"Total": 30
+				"Metrics": {
+					"value": {
+						"Max": 20,
+						"Min": 0,
+						"Num": 3,
+						"Total": 30
+					}
+				}
 			}, {
 				"Start": "0001-01-01T01:01:00+01:00",
-				"Max": 21,
-				"Min": 1,
-				"Num": 3,
-				"Total": 33
+				"Metrics": {
+					"value": {
+						"Max": 21,
+						"Min": 1,
+						"Num": 3,
+						"Total": 33
+					}
+				}
 			}, {
 				"Start": "0001-01-01T01:02:00+01:00",
-				"Max": 22,
-				"Min": 2,
-				"Num": 3,
-				"Total": 36
+				"Metrics": {
+					"value": {
+						"Max": 22,
+						"Min": 2,
+						"Num": 3,
+						"Total": 36
+					}
+				}
 			}
 		]
 	}`, jsonString(ts))
