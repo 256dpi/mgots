@@ -95,22 +95,22 @@ func BenchmarkCollectionAdd(b *testing.B) {
 		panic(err)
 	}
 
-	bulk := db.C("bench2").Bulk()
+	bulk := coll.Bulk()
 
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		coll.Add(bulk, time.Now(), map[string]float64{
+		bulk.Add(time.Now(), map[string]float64{
 			"value": float64(i),
 		}, nil)
 
 		if i%200 == 0 {
-			_, err := bulk.Run()
+			err := bulk.Run()
 			if err != nil {
 				panic(err)
 			}
 
-			bulk = db.C("bench2").Bulk()
+			bulk = coll.Bulk()
 		}
 	}
 }

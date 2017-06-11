@@ -33,13 +33,13 @@ func TestCollectionAdd(t *testing.T) {
 
 	now := time.Now()
 
-	bulk := dbc.Bulk()
+	bulk := tsc.Bulk()
 
-	tsc.Add(bulk, now, map[string]float64{
+	bulk.Add(now, map[string]float64{
 		"value": 10.0,
 	}, nil)
 
-	_, err := bulk.Run()
+	err := bulk.Run()
 	assert.NoError(t, err)
 
 	ts, err := tsc.Fetch(now.Add(-1*time.Second), now.Add(1*time.Second), "value", nil)

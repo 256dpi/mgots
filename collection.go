@@ -16,6 +16,23 @@ import (
 
 // TODO: Support some kind of grouping?
 
+// A Bulk operation can be used to add multiple samples at once.
+type Bulk struct {
+	coll *Collection
+	bulk *mgo.Bulk
+}
+
+// Add will add the insert command to the passed Bulk operation.
+func (b *Bulk) Add(timestamp time.Time, fields map[string]float64, tags bson.M) {
+	b.bulk.Upsert(b.coll.selectAndUpdate(timestamp, fields, tags))
+}
+
+// Run will insert the added operations.
+func (b *Bulk) Run() error {
+	_, err := b.bulk.Run()
+	return err
+}
+
 // A Collection represents a time series enabled collection.
 type Collection struct {
 	coll *mgo.Collection
@@ -30,15 +47,19 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 	}
 }
 
-// Insert will write a new point to the collection.
+// Insert will write a new sample to the collection.
 func (c *Collection) Insert(timestamp time.Time, fields map[string]float64, tags bson.M) error {
 	_, err := c.coll.Upsert(c.selectAndUpdate(timestamp, fields, tags))
 	return err
 }
 
-// Add will add the insert command to the passed Bulk operation.
-func (c *Collection) Add(bulk *mgo.Bulk, timestamp time.Time, fields map[string]float64, tags bson.M) {
-	bulk.Upsert(c.selectAndUpdate(timestamp, fields, tags))
+// Bulk will return a wrapped bulk operation.
+func (c *Collection) Bulk() *Bulk {
+	// create new bulk operation
+	bulk := c.coll.Bulk()
+	bulk.Unordered()
+
+	return &Bulk{coll: c, bulk: bulk}
 }
 
 func (c *Collection) selectAndUpdate(timestamp time.Time, fields map[string]float64, tags bson.M) (bson.M, bson.M) {
