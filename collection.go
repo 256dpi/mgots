@@ -7,15 +7,15 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// A Bulk operation can be used to add multiple samples at once.
+// A Bulk operation can be used to add multiple metrics at once.
 type Bulk struct {
 	coll *Collection
 	bulk *mgo.Bulk
 }
 
 // Add will add the insert command to the passed Bulk operation.
-func (b *Bulk) Add(timestamp time.Time, samples map[string]float64, tags bson.M) {
-	b.bulk.Upsert(b.coll.upsertSample(timestamp, samples, tags))
+func (b *Bulk) Add(timestamp time.Time, metrics map[string]float64, tags bson.M) {
+	b.bulk.Upsert(b.coll.upsertSample(timestamp, metrics, tags))
 }
 
 // Run will insert the added operations.
@@ -38,9 +38,9 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 	}
 }
 
-// Insert will write a new sample to the collection.
-func (c *Collection) Insert(timestamp time.Time, samples map[string]float64, tags bson.M) error {
-	_, err := c.coll.Upsert(c.upsertSample(timestamp, samples, tags))
+// Insert will write a new metrics to the collection.
+func (c *Collection) Insert(timestamp time.Time, metrics map[string]float64, tags bson.M) error {
+	_, err := c.coll.Upsert(c.upsertSample(timestamp, metrics, tags))
 	return err
 }
 
@@ -53,8 +53,8 @@ func (c *Collection) Bulk() *Bulk {
 	return &Bulk{coll: c, bulk: bulk}
 }
 
-func (c *Collection) upsertSample(timestamp time.Time, samples map[string]float64, tags bson.M) (bson.M, bson.M) {
-	// get set start and field key
+func (c *Collection) upsertSample(timestamp time.Time, metrics map[string]float64, tags bson.M) (bson.M, bson.M) {
+	// get set start and name key
 	start, key := c.res.Split(timestamp)
 
 	// prepare query
@@ -72,16 +72,16 @@ func (c *Collection) upsertSample(timestamp time.Time, samples map[string]float6
 	}
 
 	// add statements
-	for field, value := range samples {
-		update["$set"].(bson.M)["samples."+key+".start"] = c.res.Join(start, key)
-		update["$inc"].(bson.M)["samples."+key+"."+field+".total"] = value
-		update["$inc"].(bson.M)["samples."+key+"."+field+".num"] = 1
-		update["$max"].(bson.M)["samples."+key+"."+field+".max"] = value
-		update["$min"].(bson.M)["samples."+key+"."+field+".min"] = value
-		update["$inc"].(bson.M)["total."+field] = value
-		update["$inc"].(bson.M)["num."+field] = 1
-		update["$max"].(bson.M)["max."+field] = value
-		update["$min"].(bson.M)["min."+field] = value
+	for name, value := range metrics {
+		update["$set"].(bson.M)["metrics."+key+".start"] = c.res.Join(start, key)
+		update["$inc"].(bson.M)["metrics."+key+"."+name+".total"] = value
+		update["$inc"].(bson.M)["metrics."+key+"."+name+".num"] = 1
+		update["$max"].(bson.M)["metrics."+key+"."+name+".max"] = value
+		update["$min"].(bson.M)["metrics."+key+"."+name+".min"] = value
+		update["$inc"].(bson.M)["total."+name] = value
+		update["$inc"].(bson.M)["num."+name] = 1
+		update["$max"].(bson.M)["max."+name] = value
+		update["$min"].(bson.M)["min."+name] = value
 	}
 
 	return query, update
@@ -90,7 +90,7 @@ func (c *Collection) upsertSample(timestamp time.Time, samples map[string]float6
 // Avg returns the average value for the given range.
 //
 // Note: This function will operate over full sets.
-func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float64, error) {
+func (c *Collection) Avg(start, end time.Time, metric string, tags bson.M) (float64, error) {
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
@@ -100,10 +100,10 @@ func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float
 			"$group": bson.M{
 				"_id": nil,
 				"num": bson.M{
-					"$sum": "$num." + field,
+					"$sum": "$num." + metric,
 				},
 				"total": bson.M{
-					"$sum": "$total." + field,
+					"$sum": "$total." + metric,
 				},
 			},
 		},
@@ -125,18 +125,18 @@ func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float
 // Min returns the minimum value for the given range.
 //
 // Note: This function will operate over full sets.
-func (c *Collection) Min(start, end time.Time, field string, tags bson.M) (float64, error) {
-	return c.minMax("min", start, end, field, tags)
+func (c *Collection) Min(start, end time.Time, metric string, tags bson.M) (float64, error) {
+	return c.minMax("min", start, end, metric, tags)
 }
 
 // Max returns the maximum for the given range.
 //
 // Note: This function will operate over full sets.
-func (c *Collection) Max(start, end time.Time, field string, tags bson.M) (float64, error) {
-	return c.minMax("max", start, end, field, tags)
+func (c *Collection) Max(start, end time.Time, metric string, tags bson.M) (float64, error) {
+	return c.minMax("max", start, end, metric, tags)
 }
 
-func (c *Collection) minMax(method string, start, end time.Time, field string, tags bson.M) (float64, error) {
+func (c *Collection) minMax(method string, start, end time.Time, metric string, tags bson.M) (float64, error) {
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
@@ -146,7 +146,7 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 			"$group": bson.M{
 				"_id": nil,
 				method: bson.M{
-					"$" + method: "$" + method + "." + field,
+					"$" + method: "$" + method + "." + metric,
 				},
 			},
 		},
@@ -162,13 +162,13 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 	return res[method].(float64), nil
 }
 
-// TODO: AggregateSamples should handle multiple fields.
+// TODO: AggregateSamples should handle multiple metrics.
 
 // TODO: Support some kind of additional grouping during aggregation?
 
-// AggregateSamples will aggregate all samples that match the specified time
-// range and tags.
-func (c *Collection) AggregateSamples(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
+// AggregateSamples will aggregate all samples within sets that match the
+// specified time range and tags.
+func (c *Collection) AggregateSamples(start, end time.Time, metric string, tags bson.M) (*TimeSeries, error) {
 	// create aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
@@ -202,10 +202,10 @@ func (c *Collection) AggregateSamples(start, end time.Time, field string, tags b
 		{
 			"$group": bson.M{
 				"_id":   "$start",
-				"max":   bson.M{"$max": "$" + field + ".max"},
-				"min":   bson.M{"$min": "$" + field + ".min"},
-				"num":   bson.M{"$sum": "$" + field + ".num"},
-				"total": bson.M{"$sum": "$" + field + ".total"},
+				"max":   bson.M{"$max": "$" + metric + ".max"},
+				"min":   bson.M{"$min": "$" + metric + ".min"},
+				"num":   bson.M{"$sum": "$" + metric + ".num"},
+				"total": bson.M{"$sum": "$" + metric + ".total"},
 			},
 		},
 		// finalize layout
@@ -239,9 +239,9 @@ func (c *Collection) AggregateSamples(start, end time.Time, field string, tags b
 	}, nil
 }
 
-// AggregateSets will aggregate all sets matching the specified parameters and
-// return a time series.
-func (c *Collection) AggregateSets(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
+// AggregateSets will aggregate only set level metrics matching the specified
+// time range and tags.
+func (c *Collection) AggregateSets(start, end time.Time, metric string, tags bson.M) (*TimeSeries, error) {
 	// create aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
@@ -252,10 +252,10 @@ func (c *Collection) AggregateSets(start, end time.Time, field string, tags bson
 		{
 			"$group": bson.M{
 				"_id":   "$start",
-				"max":   bson.M{"$max": "$" + "max." + field},
-				"min":   bson.M{"$min": "$" + "min." + field},
-				"num":   bson.M{"$sum": "$" + "num." + field},
-				"total": bson.M{"$sum": "$" + "total." + field},
+				"max":   bson.M{"$max": "$" + "max." + metric},
+				"min":   bson.M{"$min": "$" + "min." + metric},
+				"num":   bson.M{"$sum": "$" + "num." + metric},
+				"total": bson.M{"$sum": "$" + "total." + metric},
 			},
 		},
 		// finalize layout
