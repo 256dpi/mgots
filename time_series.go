@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-// TODO: Add fill function.
-
 // A Metric is a single aggregated metric in a sample.
 type Metric struct {
 	Max   float64
