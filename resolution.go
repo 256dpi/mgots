@@ -28,6 +28,8 @@ const (
 	OneHourOf60Minutes
 	OneDayOf24Hours
 	OneMonthOfUpTo31Days
+	OneHourOf3600Seconds
+	OneDayOf1440Minutes
 )
 
 // Split will return the beginning of a set and the key of the sample.
@@ -40,7 +42,11 @@ func (r BasicResolution) Split(t time.Time) (time.Time, string) {
 	case OneDayOf24Hours:
 		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Hour())
 	case OneMonthOfUpTo31Days:
-		return time.Date(t.Year(), t.Month(), 0, 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Day())
+		return time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Day())
+	case OneHourOf3600Seconds:
+		return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location()), strconv.Itoa(t.Minute()*60 + t.Second())
+	case OneDayOf1440Minutes:
+		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Hour()*60 + t.Minute())
 	}
 
 	panic("invalid resolution")
@@ -63,6 +69,10 @@ func (r BasicResolution) Join(start time.Time, key string) time.Time {
 		return start.Add(time.Duration(i) * time.Hour)
 	case OneMonthOfUpTo31Days:
 		return start.AddDate(0, 0, i)
+	case OneHourOf3600Seconds:
+		return start.Add(time.Duration(i) * time.Second)
+	case OneDayOf1440Minutes:
+		return start.Add(time.Duration(i) * time.Minute)
 	}
 
 	panic("invalid resolution")
@@ -79,6 +89,10 @@ func (r BasicResolution) SetSize() int {
 		return 24
 	case OneMonthOfUpTo31Days:
 		return 31
+	case OneHourOf3600Seconds:
+		return 3600
+	case OneDayOf1440Minutes:
+		return 1440
 	}
 
 	panic("invalid resolution")
