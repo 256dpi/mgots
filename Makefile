@@ -2,15 +2,12 @@ all: fmt vet lint
 
 fmt:
 	go fmt .
-	go fmt ./cmd/mgots-generate
 
 vet:
 	go vet .
-	go vet ./cmd/mgots-generate
 
 lint:
 	golint .
-	golint ./cmd/mgots-generate
 
 bench:
 	mkdir -p ./bench
