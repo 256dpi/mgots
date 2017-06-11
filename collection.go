@@ -144,11 +144,11 @@ func (c *Collection) upsert(timestamp time.Time, samples map[string]float64, tag
 	for field, value := range samples {
 		update["$inc"].(bson.M)["samples."+key+"."+field+".total"] = value
 		update["$inc"].(bson.M)["samples."+key+"."+field+".num"] = 1
+		update["$max"].(bson.M)["samples."+key+"."+field+".max"] = value
+		update["$min"].(bson.M)["samples."+key+"."+field+".min"] = value
 		update["$inc"].(bson.M)["total."+field] = value
 		update["$inc"].(bson.M)["num."+field] = 1
-		update["$max"].(bson.M)["samples."+key+"."+field+".max"] = value
 		update["$max"].(bson.M)["max."+field] = value
-		update["$min"].(bson.M)["samples."+key+"."+field+".min"] = value
 		update["$min"].(bson.M)["min."+field] = value
 	}
 
