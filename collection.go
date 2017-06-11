@@ -8,6 +8,8 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+// TODO: Support multiple value fields.
+
 // TODO: Support aggregation for multiple tag combinations.
 
 // TODO: Support querying by fields and tags.
