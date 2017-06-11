@@ -94,7 +94,7 @@ func (c *Collection) upsertSample(timestamp time.Time, metrics map[string]float6
 // AggregateSamples will aggregate all samples within sets that match the
 // specified time range and tags.
 func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
-	// create aggregation pipeline
+	// prepare aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
 		{
@@ -180,7 +180,7 @@ func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, ta
 // AggregateSets will aggregate only set level metrics matching the specified
 // time range and tags.
 func (c *Collection) AggregateSets(start, end time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
-	// create aggregation pipeline
+	// prepare aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
 		{
@@ -191,10 +191,6 @@ func (c *Collection) AggregateSets(start, end time.Time, metrics []string, tags 
 			"$group": bson.M{
 				"_id": "$start",
 				// more fields added below
-				//"max": bson.M{"$max": "$" + "max." + metric},
-				//"min": bson.M{"$min": "$" + "min." + metric},
-				//"num": bson.M{"$sum": "$" + "num." + metric},
-				//"total": bson.M{"$sum": "$" + "total." + metric},
 			},
 		},
 		// finalize layout
@@ -205,10 +201,6 @@ func (c *Collection) AggregateSets(start, end time.Time, metrics []string, tags 
 				"metrics": bson.M{
 				// fields added below
 				},
-				//"max":   true,
-				//"min":   true,
-				//"num":   true,
-				//"total": true,
 			},
 		},
 		// sort samples
