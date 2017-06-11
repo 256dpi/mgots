@@ -52,7 +52,7 @@ func TestCollectionAdd(t *testing.T) {
 	now := time.Time{}
 
 	for i := 0; i < 2; i++ {
-		bulk.Add(now, map[string]float64{
+		bulk.Insert(now, map[string]float64{
 			"value": float64(i),
 		}, nil)
 	}
@@ -94,7 +94,7 @@ func TestCollectionAggregate(t *testing.T) {
 	now := time.Time{}
 
 	for i := 0; i < 3; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(i),
 		}, bson.M{
 			"host": "one",
@@ -102,7 +102,7 @@ func TestCollectionAggregate(t *testing.T) {
 	}
 
 	for i := 0; i < 3; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(10 + i),
 		}, bson.M{
 			"host": "two",
@@ -110,7 +110,7 @@ func TestCollectionAggregate(t *testing.T) {
 	}
 
 	for i := 0; i < 3; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Second), map[string]float64{
+		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(20 + i),
 		}, bson.M{
 			"host": "three",
@@ -158,7 +158,7 @@ func TestCollectionMacroAggregate(t *testing.T) {
 	now := time.Time{}
 
 	for i := 0; i < 3; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Minute), map[string]float64{
+		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(i),
 		}, bson.M{
 			"host": "one",
@@ -166,7 +166,7 @@ func TestCollectionMacroAggregate(t *testing.T) {
 	}
 
 	for i := 0; i < 3; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Minute), map[string]float64{
+		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(10 + i),
 		}, bson.M{
 			"host": "two",
@@ -174,7 +174,7 @@ func TestCollectionMacroAggregate(t *testing.T) {
 	}
 
 	for i := 0; i < 3; i++ {
-		bulk.Add(now.Add(time.Duration(i)*time.Minute), map[string]float64{
+		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(20 + i),
 		}, bson.M{
 			"host": "three",

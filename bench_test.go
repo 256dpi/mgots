@@ -100,7 +100,7 @@ func BenchmarkCollectionAdd(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		bulk.Add(time.Now(), map[string]float64{
+		bulk.Insert(time.Now(), map[string]float64{
 			"value": float64(i),
 		}, nil)
 

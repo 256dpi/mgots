@@ -7,30 +7,32 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// A Bulk operation can be used to add multiple metrics at once.
+// A Bulk represents an operation that can be used to add multiple metrics at
+// once. It is a wrapper around the mgo.Bulk type.
 type Bulk struct {
 	coll *Collection
 	bulk *mgo.Bulk
 }
 
-// Add will add the insert command to the passed Bulk operation.
-func (b *Bulk) Add(timestamp time.Time, metrics map[string]float64, tags bson.M) {
+// Insert will queue the insert in the bulk operation.
+func (b *Bulk) Insert(timestamp time.Time, metrics map[string]float64, tags bson.M) {
 	b.bulk.Upsert(b.coll.upsertSample(timestamp, metrics, tags))
 }
 
-// Run will insert the added operations.
+// Run will insert all queued insert operations.
 func (b *Bulk) Run() error {
 	_, err := b.bulk.Run()
 	return err
 }
 
-// A Collection represents a time series enabled collection.
+// A Collection represents a time series enabled collection. It is a wrapper
+// around the mgo.Collection type.
 type Collection struct {
 	coll *mgo.Collection
 	res  Resolution
 }
 
-// Wrap will take a mgo.Collection and return a mgots.Collection.
+// Wrap will take a mgo.Collection and return a Collection.
 func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 	return &Collection{
 		coll: coll,
@@ -38,13 +40,13 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 	}
 }
 
-// Insert will write a new metrics to the collection.
+// Insert will immediately write the specified metrics to the collection.
 func (c *Collection) Insert(timestamp time.Time, metrics map[string]float64, tags bson.M) error {
 	_, err := c.coll.Upsert(c.upsertSample(timestamp, metrics, tags))
 	return err
 }
 
-// Bulk will return a wrapped bulk operation.
+// Bulk will return a new bulk operation.
 func (c *Collection) Bulk() *Bulk {
 	// create new bulk operation
 	bulk := c.coll.Bulk()
@@ -73,11 +75,11 @@ func (c *Collection) upsertSample(timestamp time.Time, metrics map[string]float6
 
 	// add statements
 	for name, value := range metrics {
-		update["$set"].(bson.M)["metrics."+key+".start"] = c.res.Join(start, key)
-		update["$inc"].(bson.M)["metrics."+key+"."+name+".total"] = value
-		update["$inc"].(bson.M)["metrics."+key+"."+name+".num"] = 1
-		update["$max"].(bson.M)["metrics."+key+"."+name+".max"] = value
-		update["$min"].(bson.M)["metrics."+key+"."+name+".min"] = value
+		update["$set"].(bson.M)["samples."+key+".start"] = c.res.Join(start, key)
+		update["$inc"].(bson.M)["samples."+key+"."+name+".total"] = value
+		update["$inc"].(bson.M)["samples."+key+"."+name+".num"] = 1
+		update["$max"].(bson.M)["samples."+key+"."+name+".max"] = value
+		update["$min"].(bson.M)["samples."+key+"."+name+".min"] = value
 		update["$inc"].(bson.M)["total."+name] = value
 		update["$inc"].(bson.M)["num."+name] = 1
 		update["$max"].(bson.M)["max."+name] = value
