@@ -10,7 +10,7 @@ import (
 
 func TestCollectionInsert(t *testing.T) {
 	dbc := db.C("test-coll-insert")
-	tsc := Wrap(dbc, Second)
+	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 
 	now := time.Time{}
 
@@ -46,7 +46,7 @@ func TestCollectionInsert(t *testing.T) {
 
 func TestCollectionBulkInsert(t *testing.T) {
 	dbc := db.C("test-coll-add")
-	tsc := Wrap(dbc, Second)
+	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 	bulk := tsc.Bulk()
 
 	now := time.Time{}
@@ -87,7 +87,7 @@ func TestCollectionBulkInsert(t *testing.T) {
 
 func TestCollectionAggregateSamples(t *testing.T) {
 	dbc := db.C("test-coll-aggregate")
-	tsc := Wrap(dbc, Second)
+	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 
 	bulk := tsc.Bulk()
 
@@ -164,7 +164,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 
 func TestCollectionAggregateSets(t *testing.T) {
 	dbc := db.C("test-coll-macro-aggregate")
-	tsc := Wrap(dbc, Second)
+	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 
 	bulk := tsc.Bulk()
 

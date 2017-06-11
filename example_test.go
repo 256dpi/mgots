@@ -3,13 +3,13 @@ package mgots
 import (
 	"fmt"
 	"time"
-	
+
 	"gopkg.in/mgo.v2/bson"
 )
 
 func Example() {
 	// get time series collection
-	coll := Wrap(db.C("metrics"), Second)
+	coll := Wrap(db.C("metrics"), OneMinuteOf60Seconds)
 
 	// ensure indexes
 	err := coll.EnsureIndexes(0)

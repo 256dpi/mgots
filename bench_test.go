@@ -66,7 +66,7 @@ func BenchmarkInfluxDBBatch(b *testing.B) {
 func BenchmarkCollectionInsert(b *testing.B) {
 	b.ReportAllocs()
 
-	coll := Wrap(db.C("bench1"), Second)
+	coll := Wrap(db.C("bench1"), OneMinuteOf60Seconds)
 
 	err := coll.EnsureIndexes(0)
 	if err != nil {
@@ -88,7 +88,7 @@ func BenchmarkCollectionInsert(b *testing.B) {
 func BenchmarkCollectionAdd(b *testing.B) {
 	b.ReportAllocs()
 
-	coll := Wrap(db.C("bench2"), Second)
+	coll := Wrap(db.C("bench2"), OneMinuteOf60Seconds)
 
 	err := coll.EnsureIndexes(0)
 	if err != nil {

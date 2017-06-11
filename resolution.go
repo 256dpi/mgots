@@ -20,30 +20,26 @@ type Resolution interface {
 }
 
 // BasicResolution defines the granularity of the saved metrics.
-type BasicResolution string
+type BasicResolution int
 
 // The following basic resolutions are available:
-// - A resolution in seconds will store up to 60 samples in a document per minute.
-// - A resolution in minutes will store up to 60 samples in a document per hour.
-// - A resolution in hours will store up to 24 samples in a document per day.
-// - A resolution in days will store up to 31 samples in a document per month.
 const (
-	Second BasicResolution = "s"
-	Minute                 = "m"
-	Hour                   = "h"
-	Day                    = "d"
+	OneMinuteOf60Seconds BasicResolution = iota
+	OneHourOf60Minutes
+	OneDayOf24Hours
+	OneMonthOfUpTo31Days
 )
 
 // Split will return the beginning of a set and the key of the sample.
 func (r BasicResolution) Split(t time.Time) (time.Time, string) {
 	switch r {
-	case Second:
+	case OneMinuteOf60Seconds:
 		return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location()), strconv.Itoa(t.Second())
-	case Minute:
+	case OneHourOf60Minutes:
 		return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location()), strconv.Itoa(t.Minute())
-	case Hour:
+	case OneDayOf24Hours:
 		return time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Hour())
-	case Day:
+	case OneMonthOfUpTo31Days:
 		return time.Date(t.Year(), t.Month(), 0, 0, 0, 0, 0, t.Location()), strconv.Itoa(t.Day())
 	}
 
@@ -59,13 +55,13 @@ func (r BasicResolution) Join(start time.Time, key string) time.Time {
 	}
 
 	switch r {
-	case Second:
+	case OneMinuteOf60Seconds:
 		return start.Add(time.Duration(i) * time.Second)
-	case Minute:
+	case OneHourOf60Minutes:
 		return start.Add(time.Duration(i) * time.Minute)
-	case Hour:
+	case OneDayOf24Hours:
 		return start.Add(time.Duration(i) * time.Hour)
-	case Day:
+	case OneMonthOfUpTo31Days:
 		return start.AddDate(0, 0, i)
 	}
 
@@ -75,11 +71,13 @@ func (r BasicResolution) Join(start time.Time, key string) time.Time {
 // SetSize will return the total amount of samples per set.
 func (r BasicResolution) SetSize() int {
 	switch r {
-	case Second, Minute:
+	case OneMinuteOf60Seconds:
 		return 60
-	case Hour:
+	case OneHourOf60Minutes:
+		return 60
+	case OneDayOf24Hours:
 		return 24
-	case Day:
+	case OneMonthOfUpTo31Days:
 		return 31
 	}
 
