@@ -7,14 +7,6 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
-// TODO: Support aggregation for multiple tag combinations.
-
-// TODO: Support querying by samples and tags.
-
-// TODO: Support joining time series?
-
-// TODO: Support some kind of grouping?
-
 // A Bulk operation can be used to add multiple samples at once.
 type Bulk struct {
 	coll *Collection
@@ -23,7 +15,7 @@ type Bulk struct {
 
 // Add will add the insert command to the passed Bulk operation.
 func (b *Bulk) Add(timestamp time.Time, samples map[string]float64, tags bson.M) {
-	b.bulk.Upsert(b.coll.upsert(timestamp, samples, tags))
+	b.bulk.Upsert(b.coll.upsertSample(timestamp, samples, tags))
 }
 
 // Run will insert the added operations.
@@ -48,7 +40,7 @@ func Wrap(coll *mgo.Collection, res Resolution) *Collection {
 
 // Insert will write a new sample to the collection.
 func (c *Collection) Insert(timestamp time.Time, samples map[string]float64, tags bson.M) error {
-	_, err := c.coll.Upsert(c.upsert(timestamp, samples, tags))
+	_, err := c.coll.Upsert(c.upsertSample(timestamp, samples, tags))
 	return err
 }
 
@@ -61,7 +53,7 @@ func (c *Collection) Bulk() *Bulk {
 	return &Bulk{coll: c, bulk: bulk}
 }
 
-func (c *Collection) upsert(timestamp time.Time, samples map[string]float64, tags bson.M) (bson.M, bson.M) {
+func (c *Collection) upsertSample(timestamp time.Time, samples map[string]float64, tags bson.M) (bson.M, bson.M) {
 	// get batch start and field key
 	start, key := c.res.Split(timestamp)
 
@@ -102,7 +94,7 @@ func (c *Collection) Avg(start, end time.Time, field string, tags bson.M) (float
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.selector(start, end, tags),
+			"$match": c.matchBatches(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -148,7 +140,7 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 	// create aggregation pipeline
 	pipe := c.coll.Pipe([]bson.M{
 		{
-			"$match": c.selector(start, end, tags),
+			"$match": c.matchBatches(start, end, tags),
 		},
 		{
 			"$group": bson.M{
@@ -172,6 +164,8 @@ func (c *Collection) minMax(method string, start, end time.Time, field string, t
 
 // TODO: Aggregate should handle multiple fields.
 
+// TODO: Support some kind of additional grouping during aggregation?
+
 // Aggregate will aggregate all samples matching the specified parameters and
 // return a time series.
 func (c *Collection) Aggregate(start, end time.Time, field string, tags bson.M) (*TimeSeries, error) {
@@ -179,7 +173,7 @@ func (c *Collection) Aggregate(start, end time.Time, field string, tags bson.M) 
 	pipeline := []bson.M{
 		// get all matching batches
 		{
-			"$match": c.selector(start, end, tags),
+			"$match": c.matchBatches(start, end, tags),
 		},
 		// turn samples into an array
 		{
@@ -245,7 +239,7 @@ func (c *Collection) Aggregate(start, end time.Time, field string, tags bson.M) 
 	}, nil
 }
 
-func (c *Collection) selector(start, end time.Time, tags bson.M) bson.M {
+func (c *Collection) matchBatches(start, end time.Time, tags bson.M) bson.M {
 	// get first and last batch start point
 	batchStart, _ := c.res.Split(start)
 	batchEnd, _ := c.res.Split(end)
