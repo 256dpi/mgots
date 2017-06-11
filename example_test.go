@@ -25,7 +25,7 @@ func Example() {
 	}
 
 	// get time series collection
-	coll := Wrap(db.C("metrics.hourly"), Second)
+	coll := Wrap(db.C("metrics"), Second)
 
 	// ensure indexes
 	err = coll.EnsureIndexes(0)
