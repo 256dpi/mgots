@@ -71,7 +71,7 @@ func TestBasicResolutionSetRange(t *testing.T) {
 	}
 
 	for _, e := range table {
-		list := e.r.SetRange(parseTime(e.rs), parseTime(e.re))
+		list := e.r.SetTimestamps(parseTime(e.rs), parseTime(e.re))
 		assert.Len(t, list, e.l)
 		assert.Equal(t, e.tf, list[0].Format(time.Stamp), list[0].Format(time.Stamp))
 		assert.Equal(t, e.tc, list[e.l/2].Format(time.Stamp), list[e.l/2].Format(time.Stamp))
@@ -98,7 +98,7 @@ func TestBasicResolutionSampleRange(t *testing.T) {
 	}
 
 	for _, e := range table {
-		list := e.r.SampleRange(parseTime(e.rs), parseTime(e.re))
+		list := e.r.SampleTimestamps(parseTime(e.rs), parseTime(e.re))
 		assert.Len(t, list, e.l)
 		assert.Equal(t, e.tf, list[0].Format(time.Stamp), list[0].Format(time.Stamp))
 		assert.Equal(t, e.tc, list[e.l/2].Format(time.Stamp), list[e.l/2].Format(time.Stamp))
