@@ -58,3 +58,57 @@ func (ts *TimeSeries) Max(metric string) float64 {
 
 	return max
 }
+
+// Null will return a new TimeSeries that includes samples for the specified
+// timestamps or a null value if no sample exists in the time series.
+func (ts *TimeSeries) Null(timestamps []time.Time, metrics []string) *TimeSeries {
+	// prepare nullMetrics
+	nullMetrics := map[string]Metric{}
+
+	// fill null metrics
+	for _, name := range metrics {
+		nullMetrics[name] = Metric{}
+	}
+
+	// allocate new time series
+	newTS := &TimeSeries{
+		Start:   ts.Start,
+		End:     ts.End,
+		Samples: make([]Sample, 0, len(timestamps)),
+	}
+
+	// prepare counters
+	lastUsedSample := 0
+
+	// go through all provided timestamps
+	for _, t := range timestamps {
+		// prepare flag
+		added := false
+
+		// start searching samples from the last used
+		for i := lastUsedSample; i < len(ts.Samples); i++ {
+			// append found sample if matching
+			if ts.Samples[i].Start.Equal(t) {
+				newTS.Samples = append(newTS.Samples, ts.Samples[i])
+				lastUsedSample = i
+				added = true
+				break
+			}
+
+			// stop search if timestamp is after needle
+			if ts.Samples[i].Start.After(t) {
+				break
+			}
+		}
+
+		// add null sample if none added
+		if !added {
+			newTS.Samples = append(newTS.Samples, Sample{
+				Start:   t,
+				Metrics: nullMetrics,
+			})
+		}
+	}
+
+	return newTS
+}
