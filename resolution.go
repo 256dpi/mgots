@@ -8,22 +8,21 @@ import (
 // A Resolution specifies the granularity of saved samples and the organization
 // in sets.
 type Resolution interface {
-	// Split should return the beginning of a set and the key of the sample.
+	// Split should return the timestamp of a set and the key of the sample.
 	Split(t time.Time) (time.Time, string)
 
-	// Join should return the timestamp of a single sample based on the start of a
-	// set and the key of the sample.
+	// Join should return the timestamp of a single sample based on the timestamp
+	// of a set and the key of the sample.
 	Join(start time.Time, key string) time.Time
 
 	// SetSize should return the total amount of samples per set.
 	SetSize() int
 
-	// SetRange should return a list of all set start timestamps for the given
-	// range.
+	// SetRange should return a list of all set timestamps for the given range.
 	SetRange(start time.Time, end time.Time) []time.Time
 
-	// SampleRange should return a list of all sample start timestamps for the
-	// given range.
+	// SampleRange should return a list of all sample timestamps for the given
+	// range.
 	SampleRange(start, end time.Time) []time.Time
 }
 
@@ -104,7 +103,7 @@ func (r BasicResolution) SetSize() int {
 	panic("invalid resolution")
 }
 
-// SetRange will return a list of all set start timestamps for the given range.
+// SetRange will return a list of all set timestamps for the given range.
 func (r BasicResolution) SetRange(start, end time.Time) []time.Time {
 	firstSet, _ := r.Split(start)
 	curSet := firstSet
@@ -132,7 +131,7 @@ func (r BasicResolution) SetRange(start, end time.Time) []time.Time {
 	return list
 }
 
-// SampleRange will return a list of all sample start timestamps for the given
+// SampleRange will return a list of all sample timestamps for the given
 // range.
 func (r BasicResolution) SampleRange(start, end time.Time) []time.Time {
 	firstSet, setKey := r.Split(start)
