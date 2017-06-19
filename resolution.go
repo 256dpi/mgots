@@ -17,6 +17,14 @@ type Resolution interface {
 
 	// SetSize should return the total amount of samples per set.
 	SetSize() int
+
+	// SetRange should return a list of all set start timestamps for the given
+	// range.
+	SetRange(start time.Time, end time.Time) []time.Time
+
+	// SampleRange should return a list of all sample start timestamps for the
+	// given range.
+	SampleRange(start, end time.Time) []time.Time
 }
 
 // BasicResolution defines the granularity of the saved metrics.
@@ -94,4 +102,62 @@ func (r BasicResolution) SetSize() int {
 	}
 
 	panic("invalid resolution")
+}
+
+// SetRange will return a list of all set start timestamps for the given range.
+func (r BasicResolution) SetRange(start, end time.Time) []time.Time {
+	firstSet, _ := r.Split(start)
+	curSet := firstSet
+	list := make([]time.Time, 0)
+
+	for curSet.Before(end) {
+		list = append(list, curSet)
+
+		switch r {
+		case OneMinuteOf60Seconds:
+			curSet = curSet.Add(1 * time.Minute)
+		case OneHourOf60Minutes:
+			curSet = curSet.Add(1 * time.Hour)
+		case OneDayOf24Hours:
+			curSet = curSet.AddDate(0, 0, 1)
+		case OneMonthOfUpTo31Days:
+			curSet = curSet.AddDate(0, 1, 0)
+		case OneHourOf3600Seconds:
+			curSet = curSet.Add(1 * time.Hour)
+		case OneDayOf1440Minutes:
+			curSet = curSet.AddDate(0, 0, 1)
+		}
+	}
+
+	return list
+}
+
+// SampleRange will return a list of all sample start timestamps for the given
+// range.
+func (r BasicResolution) SampleRange(start, end time.Time) []time.Time {
+	firstSet, setKey := r.Split(start)
+	firstSample := r.Join(firstSet, setKey)
+	curSample := firstSample
+	list := make([]time.Time, 0)
+
+	for curSample.Before(end) {
+		list = append(list, curSample)
+
+		switch r {
+		case OneMinuteOf60Seconds:
+			curSample = curSample.Add(1 * time.Second)
+		case OneHourOf60Minutes:
+			curSample = curSample.Add(1 * time.Minute)
+		case OneDayOf24Hours:
+			curSample = curSample.Add(1 * time.Hour)
+		case OneMonthOfUpTo31Days:
+			curSample = curSample.AddDate(0, 0, 1)
+		case OneHourOf3600Seconds:
+			curSample = curSample.Add(1 * time.Second)
+		case OneDayOf1440Minutes:
+			curSample = curSample.Add(1 * time.Minute)
+		}
+	}
+
+	return list
 }
