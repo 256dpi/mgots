@@ -2,6 +2,7 @@ package mgots
 
 import (
 	"encoding/json"
+	"time"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -40,4 +41,13 @@ func jsonString(val interface{}) string {
 	}
 
 	return string(buf)
+}
+
+func parseTime(str string) time.Time {
+	t, err := time.Parse(time.Stamp, str)
+	if err != nil {
+		panic(err)
+	}
+
+	return t
 }
