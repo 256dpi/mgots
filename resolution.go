@@ -13,14 +13,20 @@ type Resolution interface {
 
 	// Join should return the timestamp of a single sample based on the timestamp
 	// of a set and the key of the sample.
-	Join(start time.Time, key string) time.Time
+	Join(t time.Time, key string) time.Time
 
 	// SetSize should return the total amount of samples per set.
 	SetSize() int
 
+	// SetTimestamp should return the set timestamp for the given time.
+	SetTimestamp(t time.Time) time.Time
+
 	// SetTimestamps should return a list of all set timestamps for the given
 	// range.
 	SetTimestamps(start time.Time, end time.Time) []time.Time
+
+	// SampleTimestamp should return the sample timestamp for the given time.
+	SampleTimestamp(t time.Time) time.Time
 
 	// SampleTimestamps should return a list of all sample timestamps for the
 	// given range.
@@ -62,23 +68,23 @@ func (r BasicResolution) Split(t time.Time) (time.Time, string) {
 
 // Join will return the timestamp of a single sample based on the start of a
 // set and the key of the sample.
-func (r BasicResolution) Join(start time.Time, key string) time.Time {
+func (r BasicResolution) Join(t time.Time, key string) time.Time {
 	// convert key to integer
 	i, _ := strconv.Atoi(key)
 
 	switch r {
 	case OneMinuteOf60Seconds:
-		return start.Add(time.Duration(i) * time.Second)
+		return t.Add(time.Duration(i) * time.Second)
 	case OneHourOf60Minutes:
-		return start.Add(time.Duration(i) * time.Minute)
+		return t.Add(time.Duration(i) * time.Minute)
 	case OneDayOf24Hours:
-		return start.Add(time.Duration(i) * time.Hour)
+		return t.Add(time.Duration(i) * time.Hour)
 	case OneMonthOfUpTo31Days:
-		return start.AddDate(0, 0, i-1)
+		return t.AddDate(0, 0, i-1)
 	case OneHourOf3600Seconds:
-		return start.Add(time.Duration(i) * time.Second)
+		return t.Add(time.Duration(i) * time.Second)
 	case OneDayOf1440Minutes:
-		return start.Add(time.Duration(i) * time.Minute)
+		return t.Add(time.Duration(i) * time.Minute)
 	}
 
 	panic("invalid resolution")
@@ -104,9 +110,15 @@ func (r BasicResolution) SetSize() int {
 	panic("invalid resolution")
 }
 
+// SetTimestamp will return the set timestamp for the given time.
+func (r BasicResolution) SetTimestamp(t time.Time) time.Time {
+	firstSet, _ := r.Split(t)
+	return firstSet
+}
+
 // SetTimestamps will return a list of all set timestamps for the given range.
 func (r BasicResolution) SetTimestamps(start, end time.Time) []time.Time {
-	firstSet, _ := r.Split(start)
+	firstSet := r.SetTimestamp(start)
 	curSet := firstSet
 	list := make([]time.Time, 0)
 
@@ -132,11 +144,16 @@ func (r BasicResolution) SetTimestamps(start, end time.Time) []time.Time {
 	return list
 }
 
+// SampleTimestamp will return the sample timestamp for the given time.
+func (r BasicResolution) SampleTimestamp(t time.Time) time.Time {
+	firstSet, setKey := r.Split(t)
+	return r.Join(firstSet, setKey)
+}
+
 // SampleTimestamps will return a list of all sample timestamps for the given
 // range.
 func (r BasicResolution) SampleTimestamps(start, end time.Time) []time.Time {
-	firstSet, setKey := r.Split(start)
-	firstSample := r.Join(firstSet, setKey)
+	firstSample := r.SampleTimestamp(start)
 	curSample := firstSample
 	list := make([]time.Time, 0)
 

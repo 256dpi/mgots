@@ -52,7 +52,7 @@ func TestBasicResolutionSetSize(t *testing.T) {
 	}
 }
 
-func TestBasicResolutionSetRange(t *testing.T) {
+func TestBasicResolutionSetTimestamps(t *testing.T) {
 	table := []struct {
 		r  Resolution
 		rs string
@@ -79,7 +79,7 @@ func TestBasicResolutionSetRange(t *testing.T) {
 	}
 }
 
-func TestBasicResolutionSampleRange(t *testing.T) {
+func TestBasicResolutionSampleTimestamps(t *testing.T) {
 	table := []struct {
 		r  Resolution
 		rs string
