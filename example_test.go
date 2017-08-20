@@ -23,10 +23,11 @@ func Example() {
 	// add some metrics
 	from := time.Now()
 	to := time.Now()
-	for i := 0; i <= 60; i++ {
+	for i := 0; i < 100; i++ {
 		coll.Insert(to, map[string]float64{
 			"value": float64(i),
 		}, tags)
+
 		to = to.Add(time.Second)
 	}
 
@@ -37,14 +38,16 @@ func Example() {
 	}
 
 	// print
-	fmt.Println(len(ts.Samples))
+	fmt.Println(ts.Num("value"))
+	fmt.Println(ts.Sum("value"))
 	fmt.Println(ts.Min("value"))
-	fmt.Println(ts.Avg("value"))
 	fmt.Println(ts.Max("value"))
+	fmt.Println(ts.Avg("value"))
 
 	// Output:
-	// 61
+	// 100
+	// 4950
 	// 0
-	// 30
-	// 60
+	// 99
+	// 49.5
 }
