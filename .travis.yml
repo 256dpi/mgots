@@ -5,12 +5,15 @@ go:
   - tip
 services:
   - mongodb
+addons:
+  apt:
+    sources:
+      - mongodb-3.0-precise
+    packages:
+      - mongodb-org-server
 before_install:
   - go get github.com/mattn/goveralls
 install:
   - go get -t ./...
 script:
   - $HOME/gopath/bin/goveralls -service=travis-ci
-matrix:
-  allow_failures:
-    - go: tip
