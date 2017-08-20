@@ -104,7 +104,5 @@ func (ts *TimeSeries) Null(timestamps []time.Time, metrics []string) *TimeSeries
 		}
 	}
 
-	return &TimeSeries{
-		Samples: samples,
-	}
+	return &TimeSeries{samples}
 }

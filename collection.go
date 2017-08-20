@@ -57,9 +57,9 @@ func (c *Collection) Bulk() *Bulk {
 	return &Bulk{coll: c, bulk: bulk}
 }
 
-func (c *Collection) upsertSample(timestamp time.Time, metrics map[string]float64, tags bson.M) (bson.M, bson.M) {
+func (c *Collection) upsertSample(t time.Time, metrics map[string]float64, tags bson.M) (bson.M, bson.M) {
 	// get set start and name key
-	start, key := c.res.Split(timestamp)
+	start, key := c.res.Split(t)
 
 	// prepare query
 	query := bson.M{
@@ -170,9 +170,7 @@ func (c *Collection) AggregateSamples(first, last time.Time, metrics []string, t
 		return nil, err
 	}
 
-	return &TimeSeries{
-		Samples: samples,
-	}, nil
+	return &TimeSeries{samples}, nil
 }
 
 // AggregateSets will aggregate only set level metrics matching the specified
@@ -231,9 +229,7 @@ func (c *Collection) AggregateSets(first, last time.Time, metrics []string, tags
 		return nil, err
 	}
 
-	return &TimeSeries{
-		Samples: samples,
-	}, nil
+	return &TimeSeries{samples}, nil
 }
 
 func (c *Collection) matchSets(first, last time.Time, tags bson.M) bson.M {
