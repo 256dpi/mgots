@@ -113,7 +113,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 
 	now := parseTime("Jul 15 15:15:15")
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(i),
 		}, bson.M{
@@ -122,7 +122,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 		})
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(10 + i),
 		}, bson.M{
@@ -131,7 +131,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 		})
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
 			"value": float64(20 + i),
 		}, bson.M{
@@ -143,20 +143,14 @@ func TestCollectionAggregateSamples(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.AggregateSamples(now, now.Add(2*time.Second), []string{"value"}, bson.M{
+	ts, err := tsc.AggregateSamples(now.Add(time.Second), now.Add(3*time.Second), []string{"value"}, bson.M{
 		"foo": "bar",
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &TimeSeries{
-		Start: parseTime("Jul 15 15:15:15"),
-		End:   parseTime("Jul 15 15:15:17"),
+		Start: parseTime("Jul 15 15:15:16"),
+		End:   parseTime("Jul 15 15:15:18"),
 		Samples: []Sample{
-			{
-				Start: parseTime("Jul 15 15:15:15"),
-				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 0, Num: 3, Total: 30},
-				},
-			},
 			{
 				Start: parseTime("Jul 15 15:15:16"),
 				Metrics: map[string]Metric{
@@ -167,6 +161,12 @@ func TestCollectionAggregateSamples(t *testing.T) {
 				Start: parseTime("Jul 15 15:15:17"),
 				Metrics: map[string]Metric{
 					"value": {Max: 22, Min: 2, Num: 3, Total: 36},
+				},
+			},
+			{
+				Start: parseTime("Jul 15 15:15:18"),
+				Metrics: map[string]Metric{
+					"value": {Max: 23, Min: 3, Num: 3, Total: 39},
 				},
 			},
 		},
@@ -181,7 +181,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 
 	now := parseTime("Jul 15 15:15:15")
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(i),
 		}, bson.M{
@@ -190,7 +190,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 		})
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(10 + i),
 		}, bson.M{
@@ -199,7 +199,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 		})
 	}
 
-	for i := 0; i < 3; i++ {
+	for i := 0; i < 5; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
 			"value": float64(20 + i),
 		}, bson.M{
@@ -211,20 +211,14 @@ func TestCollectionAggregateSets(t *testing.T) {
 	err := bulk.Run()
 	assert.NoError(t, err)
 
-	ts, err := tsc.AggregateSets(now, now.Add(3*time.Minute), []string{"value"}, bson.M{
+	ts, err := tsc.AggregateSets(now.Add(time.Minute), now.Add(3*time.Minute), []string{"value"}, bson.M{
 		"foo": "bar",
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &TimeSeries{
-		Start: parseTime("Jul 15 15:15:15"),
+		Start: parseTime("Jul 15 15:16:15"),
 		End:   parseTime("Jul 15 15:18:15"),
 		Samples: []Sample{
-			{
-				Start: parseTime("Jul 15 15:15:00"),
-				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 0, Num: 3, Total: 30},
-				},
-			},
 			{
 				Start: parseTime("Jul 15 15:16:00"),
 				Metrics: map[string]Metric{
@@ -235,6 +229,12 @@ func TestCollectionAggregateSets(t *testing.T) {
 				Start: parseTime("Jul 15 15:17:00"),
 				Metrics: map[string]Metric{
 					"value": {Max: 22, Min: 2, Num: 3, Total: 36},
+				},
+			},
+			{
+				Start: parseTime("Jul 15 15:18:00"),
+				Metrics: map[string]Metric{
+					"value": {Max: 23, Min: 3, Num: 3, Total: 39},
 				},
 			},
 		},
