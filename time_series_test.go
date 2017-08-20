@@ -7,12 +7,12 @@ import (
 )
 
 func TestTimeSeriesNull1(t *testing.T) {
-	tl := OneMinuteOf60Seconds.SampleTimestamps(parseTime("Jul 15 15:15:15"), parseTime("Jul 15 15:15:18"))
-	assert.Len(t, tl, 4)
+	tl := OneMinuteOf60Seconds.SampleTimestamps(parseTime("Jul 15 15:15:15"), parseTime("Jul 15 15:15:17"))
+	assert.Len(t, tl, 3)
 
 	ts := &TimeSeries{
 		Start: tl[0],
-		End:   tl[3],
+		End:   tl[2],
 		Samples: []Sample{
 			// <- missing sample
 			{
@@ -27,17 +27,16 @@ func TestTimeSeriesNull1(t *testing.T) {
 					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
 				},
 			},
-			// <- missing sample
 		},
 	}
 
 	ts2 := ts.Null(tl, []string{"value"})
-	assert.Len(t, ts2.Samples, 4)
+	assert.Len(t, ts2.Samples, 3)
 	assert.Equal(t, ts.Start, ts2.Start)
 	assert.Equal(t, ts.End, ts2.End)
 	assert.Equal(t, &TimeSeries{
 		Start: parseTime("Jul 15 15:15:15"),
-		End:   parseTime("Jul 15 15:15:18"),
+		End:   parseTime("Jul 15 15:15:17"),
 		Samples: []Sample{
 			{
 				Start: parseTime("Jul 15 15:15:15"),
@@ -55,12 +54,6 @@ func TestTimeSeriesNull1(t *testing.T) {
 				Start: parseTime("Jul 15 15:15:17"),
 				Metrics: map[string]Metric{
 					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
-				},
-			},
-			{
-				Start: parseTime("Jul 15 15:15:18"),
-				Metrics: map[string]Metric{
-					"value": {Max: 0, Min: 0, Num: 0, Total: 0},
 				},
 			},
 		},
@@ -68,12 +61,12 @@ func TestTimeSeriesNull1(t *testing.T) {
 }
 
 func TestTimeSeriesNull2(t *testing.T) {
-	tl := OneMinuteOf60Seconds.SampleTimestamps(parseTime("Jul 15 15:15:15"), parseTime("Jul 15 15:15:18"))
-	assert.Len(t, tl, 4)
+	tl := OneMinuteOf60Seconds.SampleTimestamps(parseTime("Jul 15 15:15:15"), parseTime("Jul 15 15:15:17"))
+	assert.Len(t, tl, 3)
 
 	ts := &TimeSeries{
 		Start: tl[0],
-		End:   tl[3],
+		End:   tl[2],
 		Samples: []Sample{
 			{
 				Start: tl[0],
@@ -88,17 +81,16 @@ func TestTimeSeriesNull2(t *testing.T) {
 					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
 				},
 			},
-			// <- missing sample
 		},
 	}
 
 	ts2 := ts.Null(tl, []string{"value"})
-	assert.Len(t, ts2.Samples, 4)
+	assert.Len(t, ts2.Samples, 3)
 	assert.Equal(t, ts.Start, ts2.Start)
 	assert.Equal(t, ts.End, ts2.End)
 	assert.Equal(t, &TimeSeries{
 		Start: parseTime("Jul 15 15:15:15"),
-		End:   parseTime("Jul 15 15:15:18"),
+		End:   parseTime("Jul 15 15:15:17"),
 		Samples: []Sample{
 			{
 				Start: parseTime("Jul 15 15:15:15"),
@@ -118,23 +110,17 @@ func TestTimeSeriesNull2(t *testing.T) {
 					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
 				},
 			},
-			{
-				Start: parseTime("Jul 15 15:15:18"),
-				Metrics: map[string]Metric{
-					"value": {Max: 0, Min: 0, Num: 0, Total: 0},
-				},
-			},
 		},
 	}, forceUTCTimeSeries(ts2))
 }
 
 func TestTimeSeriesNull3(t *testing.T) {
-	tl := OneMinuteOf60Seconds.SampleTimestamps(parseTime("Jul 15 15:15:15"), parseTime("Jul 15 15:15:18"))
-	assert.Len(t, tl, 4)
+	tl := OneMinuteOf60Seconds.SampleTimestamps(parseTime("Jul 15 15:15:15"), parseTime("Jul 15 15:15:17"))
+	assert.Len(t, tl, 3)
 
 	ts := &TimeSeries{
 		Start: tl[0],
-		End:   tl[3],
+		End:   tl[2],
 		Samples: []Sample{
 			{
 				Start: tl[0],
@@ -149,17 +135,16 @@ func TestTimeSeriesNull3(t *testing.T) {
 				},
 			},
 			// <- missing sample
-			// <- missing sample
 		},
 	}
 
 	ts2 := ts.Null(tl, []string{"value"})
-	assert.Len(t, ts2.Samples, 4)
+	assert.Len(t, ts2.Samples, 3)
 	assert.Equal(t, ts.Start, ts2.Start)
 	assert.Equal(t, ts.End, ts2.End)
 	assert.Equal(t, &TimeSeries{
 		Start: parseTime("Jul 15 15:15:15"),
-		End:   parseTime("Jul 15 15:15:18"),
+		End:   parseTime("Jul 15 15:15:17"),
 		Samples: []Sample{
 			{
 				Start: parseTime("Jul 15 15:15:15"),
@@ -175,12 +160,6 @@ func TestTimeSeriesNull3(t *testing.T) {
 			},
 			{
 				Start: parseTime("Jul 15 15:15:17"),
-				Metrics: map[string]Metric{
-					"value": {Max: 0, Min: 0, Num: 0, Total: 0},
-				},
-			},
-			{
-				Start: parseTime("Jul 15 15:15:18"),
 				Metrics: map[string]Metric{
 					"value": {Max: 0, Min: 0, Num: 0, Total: 0},
 				},
