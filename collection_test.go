@@ -23,25 +23,35 @@ func TestCollectionInsert(t *testing.T) {
 	err = dbc.Find(nil).Select(bson.M{"_id": 0}).All(&data)
 	assert.NoError(t, err)
 
-	assert.JSONEq(t, `[{
-		"start": "2017-07-15T17:15:00+02:00",
-		"tags": {},
-		"total": { "value": 10 },
-		"max": { "value": 10 },
-		"min": { "value": 10 },
-		"num": { "value": 1 },
-		"samples": {
-			"15": {
-				"start":"2017-07-15T17:15:15+02:00",
-				"value": {
-					"max": 10,
-					"min": 10,
-					"num": 1,
-					"total": 10
-				}
-			}
-		}
-	}]`, jsonString(data))
+	assert.Equal(t, []bson.M{
+		{
+			"num": bson.M{
+				"value": int(1),
+			},
+			"total": bson.M{
+				"value": float64(10),
+			},
+			"max": bson.M{
+				"value": float64(10),
+			},
+			"min": bson.M{
+				"value": float64(10),
+			},
+			"start": parseTime("Jul 15 15:15:00"),
+			"tags":  bson.M{},
+			"samples": bson.M{
+				"15": bson.M{
+					"start": parseTime("Jul 15 15:15:15"),
+					"value": bson.M{
+						"total": float64(10),
+						"num":   int(1),
+						"max":   float64(10),
+						"min":   float64(10),
+					},
+				},
+			},
+		},
+	}, forceUTCSlice(data))
 }
 
 func TestCollectionBulkInsert(t *testing.T) {
@@ -64,25 +74,35 @@ func TestCollectionBulkInsert(t *testing.T) {
 	err = dbc.Find(nil).Select(bson.M{"_id": 0}).All(&data)
 	assert.NoError(t, err)
 
-	assert.JSONEq(t, `[{
-		"start": "2017-07-15T17:15:00+02:00",
-		"tags": {},
-		"total": { "value": 1 },
-		"max": { "value": 1 },
-		"min": { "value": 0 },
-		"num": { "value": 2 },
-		"samples": {
-			"15": {
-				"start":"2017-07-15T17:15:15+02:00",
-				"value": {
-					"max": 1,
-					"min": 0,
-					"num": 2,
-					"total": 1
-				}
-			}
-		}
-	}]`, jsonString(data))
+	assert.Equal(t, []bson.M{
+		{
+			"start": parseTime("Jul 15 15:15:00"),
+			"tags":  bson.M{},
+			"samples": bson.M{
+				"15": bson.M{
+					"start": parseTime("Jul 15 15:15:15"),
+					"value": bson.M{
+						"total": float64(1),
+						"num":   int(2),
+						"max":   float64(1),
+						"min":   float64(0),
+					},
+				},
+			},
+			"total": bson.M{
+				"value": float64(1),
+			},
+			"num": bson.M{
+				"value": int(2),
+			},
+			"max": bson.M{
+				"value": float64(1),
+			},
+			"min": bson.M{
+				"value": float64(0),
+			},
+		},
+	}, forceUTCSlice(data))
 }
 
 func TestCollectionAggregateSamples(t *testing.T) {
@@ -127,44 +147,30 @@ func TestCollectionAggregateSamples(t *testing.T) {
 		"foo": "bar",
 	})
 	assert.NoError(t, err)
-	assert.JSONEq(t, `{
-		"Start": "2017-07-15T15:15:15Z",
-		"End": "2017-07-15T15:15:17Z",
-		"Samples":[
+	assert.Equal(t, &TimeSeries{
+		Start: parseTime("Jul 15 15:15:15"),
+		End:   parseTime("Jul 15 15:15:17"),
+		Samples: []Sample{
 			{
-				"Start": "2017-07-15T17:15:15+02:00",
-				"Metrics": {
-					"value": {
-						"Max": 20,
-						"Min": 0,
-						"Num": 3,
-						"Total": 30
-					}
-				}
-			}, {
-				"Start": "2017-07-15T17:15:16+02:00",
-				"Metrics": {
-					"value": {
-						"Max": 21,
-						"Min": 1,
-						"Num": 3,
-						"Total": 33
-					}
-				}
-			}, {
-				"Start": "2017-07-15T17:15:17+02:00",
-				"Metrics": {
-					"value": {
-						"Max": 22,
-						"Min": 2,
-						"Num": 3,
-						"Total": 36
-					}
-				}
-
-			}
-		]
-	}`, jsonString(ts))
+				Start: parseTime("Jul 15 15:15:15"),
+				Metrics: map[string]Metric{
+					"value": {Max: 20, Min: 0, Num: 3, Total: 30},
+				},
+			},
+			{
+				Start: parseTime("Jul 15 15:15:16"),
+				Metrics: map[string]Metric{
+					"value": {Max: 21, Min: 1, Num: 3, Total: 33},
+				},
+			},
+			{
+				Start: parseTime("Jul 15 15:15:17"),
+				Metrics: map[string]Metric{
+					"value": {Max: 22, Min: 2, Num: 3, Total: 36},
+				},
+			},
+		},
+	}, forceUTCTimeSeries(ts))
 }
 
 func TestCollectionAggregateSets(t *testing.T) {
@@ -209,41 +215,28 @@ func TestCollectionAggregateSets(t *testing.T) {
 		"foo": "bar",
 	})
 	assert.NoError(t, err)
-	assert.JSONEq(t, `{
-		"Start": "2017-07-15T15:15:15Z",
-		"End": "2017-07-15T15:18:15Z",
-		"Samples":[
+	assert.Equal(t, &TimeSeries{
+		Start: parseTime("Jul 15 15:15:15"),
+		End:   parseTime("Jul 15 15:18:15"),
+		Samples: []Sample{
 			{
-				"Start": "2017-07-15T17:15:00+02:00",
-				"Metrics": {
-					"value": {
-						"Max": 20,
-						"Min": 0,
-						"Num": 3,
-						"Total": 30
-					}
-				}
-			}, {
-				"Start": "2017-07-15T17:16:00+02:00",
-				"Metrics": {
-					"value": {
-						"Max": 21,
-						"Min": 1,
-						"Num": 3,
-						"Total": 33
-					}
-				}
-			}, {
-				"Start": "2017-07-15T17:17:00+02:00",
-				"Metrics": {
-					"value": {
-						"Max": 22,
-						"Min": 2,
-						"Num": 3,
-						"Total": 36
-					}
-				}
-			}
-		]
-	}`, jsonString(ts))
+				Start: parseTime("Jul 15 15:15:00"),
+				Metrics: map[string]Metric{
+					"value": {Max: 20, Min: 0, Num: 3, Total: 30},
+				},
+			},
+			{
+				Start: parseTime("Jul 15 15:16:00"),
+				Metrics: map[string]Metric{
+					"value": {Max: 21, Min: 1, Num: 3, Total: 33},
+				},
+			},
+			{
+				Start: parseTime("Jul 15 15:17:00"),
+				Metrics: map[string]Metric{
+					"value": {Max: 22, Min: 2, Num: 3, Total: 36},
+				},
+			},
+		},
+	}, forceUTCTimeSeries(ts))
 }

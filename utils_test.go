@@ -1,7 +1,6 @@
 package mgots
 
 import (
-	"encoding/json"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -33,16 +32,6 @@ func init() {
 	}
 }
 
-func jsonString(val interface{}) string {
-	// marshal as json
-	buf, err := json.Marshal(val)
-	if err != nil {
-		panic(err)
-	}
-
-	return string(buf)
-}
-
 func parseTime(str string) time.Time {
 	t, err := time.Parse(time.Stamp, str)
 	if err != nil {
@@ -51,5 +40,40 @@ func parseTime(str string) time.Time {
 
 	t = t.AddDate(2017, 0, 0)
 
-	return t
+	return t.UTC()
+}
+
+func forceUTCSlice(s []bson.M) []bson.M {
+	for _, m := range s {
+		forceUTCMap(m)
+	}
+
+	return s
+}
+
+func forceUTCMap(m bson.M) bson.M {
+	for key, value := range m {
+		if v, ok := value.(bson.M); ok {
+			forceUTCMap(v)
+		} else if v, ok := value.([]bson.M); ok {
+			forceUTCSlice(v)
+		} else if v, ok := value.(time.Time); ok {
+			m[key] = v.UTC()
+		}
+	}
+
+	return m
+}
+
+func forceUTCTimeSeries(ts *TimeSeries) *TimeSeries {
+	ts.Start = ts.Start.UTC()
+	ts.End = ts.End.UTC()
+
+	for i, s := range ts.Samples {
+		ss := s
+		ss.Start = ss.Start.UTC()
+		ts.Samples[i] = ss
+	}
+
+	return ts
 }
