@@ -33,11 +33,11 @@ func TestTimeSeriesNull1(t *testing.T) {
 	assert.Equal(t, ts.Start, ts2.Start)
 	assert.Equal(t, ts.End, ts2.End)
 	assert.JSONEq(t, `{
-		"Start": "0000-07-15T15:15:15Z",
-		"End": "0000-07-15T15:15:17Z",
+		"Start": "2017-07-15T15:15:15Z",
+		"End": "2017-07-15T15:15:17Z",
 		"Samples":[
 			{
-				"Start": "0000-07-15T15:15:15Z",
+				"Start": "2017-07-15T15:15:15Z",
 				"Metrics": {
 					"value": {
 						"Max": 0,
@@ -47,7 +47,7 @@ func TestTimeSeriesNull1(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0000-07-15T15:15:16Z",
+				"Start": "2017-07-15T15:15:16Z",
 				"Metrics": {
 					"value": {
 						"Max": 10,
@@ -58,7 +58,7 @@ func TestTimeSeriesNull1(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0000-07-15T15:15:17Z",
+				"Start": "2017-07-15T15:15:17Z",
 				"Metrics": {
 					"value": {
 						"Max": 20,
@@ -99,11 +99,11 @@ func TestTimeSeriesNull2(t *testing.T) {
 	assert.Equal(t, ts.Start, ts2.Start)
 	assert.Equal(t, ts.End, ts2.End)
 	assert.JSONEq(t, `{
-		"Start": "0000-07-15T15:15:15Z",
-		"End": "0000-07-15T15:15:17Z",
+		"Start": "2017-07-15T15:15:15Z",
+		"End": "2017-07-15T15:15:17Z",
 		"Samples":[
 			{
-				"Start": "0000-07-15T15:15:15Z",
+				"Start": "2017-07-15T15:15:15Z",
 				"Metrics": {
 					"value": {
 						"Max": 10,
@@ -113,7 +113,7 @@ func TestTimeSeriesNull2(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0000-07-15T15:15:16Z",
+				"Start": "2017-07-15T15:15:16Z",
 				"Metrics": {
 					"value": {
 						"Max": 0,
@@ -123,7 +123,7 @@ func TestTimeSeriesNull2(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0000-07-15T15:15:17Z",
+				"Start": "2017-07-15T15:15:17Z",
 				"Metrics": {
 					"value": {
 						"Max": 20,
@@ -164,11 +164,11 @@ func TestTimeSeriesNull3(t *testing.T) {
 	assert.Equal(t, ts.Start, ts2.Start)
 	assert.Equal(t, ts.End, ts2.End)
 	assert.JSONEq(t, `{
-		"Start": "0000-07-15T15:15:15Z",
-		"End": "0000-07-15T15:15:17Z",
+		"Start": "2017-07-15T15:15:15Z",
+		"End": "2017-07-15T15:15:17Z",
 		"Samples":[
 			{
-				"Start": "0000-07-15T15:15:15Z",
+				"Start": "2017-07-15T15:15:15Z",
 				"Metrics": {
 					"value": {
 						"Max": 10,
@@ -178,7 +178,7 @@ func TestTimeSeriesNull3(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0000-07-15T15:15:16Z",
+				"Start": "2017-07-15T15:15:16Z",
 				"Metrics": {
 					"value": {
 						"Max": 20,
@@ -188,7 +188,7 @@ func TestTimeSeriesNull3(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0000-07-15T15:15:17Z",
+				"Start": "2017-07-15T15:15:17Z",
 				"Metrics": {
 					"value": {
 						"Max": 0,

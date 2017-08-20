@@ -12,7 +12,7 @@ func TestCollectionInsert(t *testing.T) {
 	dbc := db.C("test-coll-insert")
 	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 
-	now := time.Time{}
+	now := parseTime("Jul 15 15:15:15")
 
 	err := tsc.Insert(now, map[string]float64{
 		"value": 10.0,
@@ -24,15 +24,15 @@ func TestCollectionInsert(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.JSONEq(t, `[{
-		"start": "0001-01-01T00:00:00Z",
+		"start": "2017-07-15T17:15:00+02:00",
 		"tags": {},
 		"total": { "value": 10 },
 		"max": { "value": 10 },
 		"min": { "value": 10 },
 		"num": { "value": 1 },
 		"samples": {
-			"0": {
-				"start":"0001-01-01T00:00:00Z",
+			"15": {
+				"start":"2017-07-15T17:15:15+02:00",
 				"value": {
 					"max": 10,
 					"min": 10,
@@ -49,7 +49,7 @@ func TestCollectionBulkInsert(t *testing.T) {
 	tsc := Wrap(dbc, OneMinuteOf60Seconds)
 	bulk := tsc.Bulk()
 
-	now := time.Time{}
+	now := parseTime("Jul 15 15:15:15")
 
 	for i := 0; i < 2; i++ {
 		bulk.Insert(now, map[string]float64{
@@ -65,15 +65,15 @@ func TestCollectionBulkInsert(t *testing.T) {
 	assert.NoError(t, err)
 
 	assert.JSONEq(t, `[{
-		"start": "0001-01-01T00:00:00Z",
+		"start": "2017-07-15T17:15:00+02:00",
 		"tags": {},
 		"total": { "value": 1 },
 		"max": { "value": 1 },
 		"min": { "value": 0 },
 		"num": { "value": 2 },
 		"samples": {
-			"0": {
-				"start":"0001-01-01T00:00:00Z",
+			"15": {
+				"start":"2017-07-15T17:15:15+02:00",
 				"value": {
 					"max": 1,
 					"min": 0,
@@ -91,7 +91,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 
 	bulk := tsc.Bulk()
 
-	now := time.Time{}
+	now := parseTime("Jul 15 15:15:15")
 
 	for i := 0; i < 3; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Second), map[string]float64{
@@ -128,11 +128,11 @@ func TestCollectionAggregateSamples(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
-		"Start": "0001-01-01T00:00:00Z",
-		"End": "0001-01-01T00:00:02Z",
+		"Start": "2017-07-15T15:15:15Z",
+		"End": "2017-07-15T15:15:17Z",
 		"Samples":[
 			{
-				"Start": "0001-01-01T00:00:00Z",
+				"Start": "2017-07-15T17:15:15+02:00",
 				"Metrics": {
 					"value": {
 						"Max": 20,
@@ -142,7 +142,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0001-01-01T01:00:01+01:00",
+				"Start": "2017-07-15T17:15:16+02:00",
 				"Metrics": {
 					"value": {
 						"Max": 21,
@@ -152,7 +152,7 @@ func TestCollectionAggregateSamples(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0001-01-01T01:00:02+01:00",
+				"Start": "2017-07-15T17:15:17+02:00",
 				"Metrics": {
 					"value": {
 						"Max": 22,
@@ -173,7 +173,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 
 	bulk := tsc.Bulk()
 
-	now := time.Time{}
+	now := parseTime("Jul 15 15:15:15")
 
 	for i := 0; i < 3; i++ {
 		bulk.Insert(now.Add(time.Duration(i)*time.Minute), map[string]float64{
@@ -210,11 +210,11 @@ func TestCollectionAggregateSets(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.JSONEq(t, `{
-		"Start": "0001-01-01T00:00:00Z",
-		"End": "0001-01-01T00:03:00Z",
+		"Start": "2017-07-15T15:15:15Z",
+		"End": "2017-07-15T15:18:15Z",
 		"Samples":[
 			{
-				"Start": "0001-01-01T00:00:00Z",
+				"Start": "2017-07-15T17:15:00+02:00",
 				"Metrics": {
 					"value": {
 						"Max": 20,
@@ -224,7 +224,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0001-01-01T01:01:00+01:00",
+				"Start": "2017-07-15T17:16:00+02:00",
 				"Metrics": {
 					"value": {
 						"Max": 21,
@@ -234,7 +234,7 @@ func TestCollectionAggregateSets(t *testing.T) {
 					}
 				}
 			}, {
-				"Start": "0001-01-01T01:02:00+01:00",
+				"Start": "2017-07-15T17:17:00+02:00",
 				"Metrics": {
 					"value": {
 						"Max": 22,
