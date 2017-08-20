@@ -94,11 +94,15 @@ func (c *Collection) upsertSample(t time.Time, metrics map[string]float64, tags 
 // AggregateSamples will aggregate all samples within sets that match the
 // specified time range and tags.
 func (c *Collection) AggregateSamples(first, last time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
+	// get first and last sample
+	firstSample := c.res.SampleTimestamp(first)
+	lastSample := c.res.SampleTimestamp(last)
+
 	// prepare aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
 		{
-			"$match": c.matchSets(first, last, tags),
+			"$match": c.matchSets(firstSample, lastSample, tags),
 		},
 		// turn samples into an array
 		{
@@ -118,8 +122,8 @@ func (c *Collection) AggregateSamples(first, last time.Time, metrics []string, t
 		{
 			"$match": bson.M{
 				"start": bson.M{
-					"$gte": first,
-					"$lte": last,
+					"$gte": firstSample,
+					"$lte": lastSample,
 				},
 			},
 		},

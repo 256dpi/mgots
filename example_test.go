@@ -31,7 +31,7 @@ func Example() {
 	}
 
 	// get data
-	ts, err := coll.AggregateSamples(from.Add(10*time.Second), to.Add(-10*time.Second), []string{"value"}, tags)
+	ts, err := coll.AggregateSamples(from, to, []string{"value"}, tags)
 	if err != nil {
 		panic(err)
 	}
@@ -43,8 +43,8 @@ func Example() {
 	fmt.Println(ts.Max("value"))
 
 	// Output:
-	// 41
-	// 11
-	// 31
-	// 51
+	// 61
+	// 0
+	// 30
+	// 60
 }
