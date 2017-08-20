@@ -1,3 +1,5 @@
+// Package mgots is a wrapper for mgo that turns MongoDB into a time series
+// database.
 package mgots
 
 import (
