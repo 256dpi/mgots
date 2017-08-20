@@ -93,12 +93,12 @@ func (c *Collection) upsertSample(timestamp time.Time, metrics map[string]float6
 
 // AggregateSamples will aggregate all samples within sets that match the
 // specified time range and tags.
-func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) AggregateSamples(first, last time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
 	// prepare aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
 		{
-			"$match": c.matchSets(start, end, tags),
+			"$match": c.matchSets(first, last, tags),
 		},
 		// turn samples into an array
 		{
@@ -118,8 +118,8 @@ func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, ta
 		{
 			"$match": bson.M{
 				"start": bson.M{
-					"$gte": start,
-					"$lte": end,
+					"$gte": first,
+					"$lte": last,
 				},
 			},
 		},
@@ -177,12 +177,12 @@ func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, ta
 
 // AggregateSets will aggregate only set level metrics matching the specified
 // time range and tags.
-func (c *Collection) AggregateSets(start, end time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
+func (c *Collection) AggregateSets(first, last time.Time, metrics []string, tags bson.M) (*TimeSeries, error) {
 	// prepare aggregation pipeline
 	pipeline := []bson.M{
 		// get all matching sets
 		{
-			"$match": c.matchSets(start, end, tags),
+			"$match": c.matchSets(first, last, tags),
 		},
 		// group samples
 		{
@@ -236,16 +236,16 @@ func (c *Collection) AggregateSets(start, end time.Time, metrics []string, tags 
 	}, nil
 }
 
-func (c *Collection) matchSets(start, end time.Time, tags bson.M) bson.M {
-	// get first and last set start point
-	setStart, _ := c.res.Split(start)
-	setEnd, _ := c.res.Split(end)
+func (c *Collection) matchSets(first, last time.Time, tags bson.M) bson.M {
+	// get first and last set
+	firstSet, _ := c.res.Split(first)
+	lastSet, _ := c.res.Split(last)
 
 	// create basic matcher
 	match := bson.M{
 		"start": bson.M{
-			"$gte": setStart,
-			"$lte": setEnd,
+			"$gte": firstSet,
+			"$lte": lastSet,
 		},
 	}
 

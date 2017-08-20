@@ -55,8 +55,8 @@ func TestBasicResolutionSetSize(t *testing.T) {
 func TestBasicResolutionSetTimestamps(t *testing.T) {
 	table := []struct {
 		res    Resolution
-		start  string
-		end    string
+		from   string
+		to     string
 		len    int
 		first  string
 		middle string
@@ -64,8 +64,8 @@ func TestBasicResolutionSetTimestamps(t *testing.T) {
 	}{
 		{
 			res:    OneMinuteOf60Seconds,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 15 16:16:15",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 15 16:16:15",
 			len:    62,
 			first:  "Jul 15 15:15:00",
 			middle: "Jul 15 15:46:00",
@@ -73,16 +73,16 @@ func TestBasicResolutionSetTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneHourOf60Minutes,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 16 16:15:15",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 16 16:15:15",
 			len:    26,
 			first:  "Jul 15 15:00:00",
 			middle: "Jul 16 04:00:00",
 			last:   "Jul 16 16:00:00",
 		},
 		{res: OneDayOf24Hours,
-			start:  "Jul 15 15:15:15",
-			end:    "Aug 16 15:15:15",
+			from:   "Jul 15 15:15:15",
+			to:     "Aug 16 15:15:15",
 			len:    33,
 			first:  "Jul 15 00:00:00",
 			middle: "Jul 31 00:00:00",
@@ -90,8 +90,8 @@ func TestBasicResolutionSetTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneMonthOfUpTo31Days,
-			start:  "Jul 15 15:15:15",
-			end:    "Sep 15 15:15:15",
+			from:   "Jul 15 15:15:15",
+			to:     "Sep 15 15:15:15",
 			len:    3,
 			first:  "Jul  1 00:00:00",
 			middle: "Aug  1 00:00:00",
@@ -99,8 +99,8 @@ func TestBasicResolutionSetTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneHourOf3600Seconds,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 16 16:15:15",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 16 16:15:15",
 			len:    26,
 			first:  "Jul 15 15:00:00",
 			middle: "Jul 16 04:00:00",
@@ -108,8 +108,8 @@ func TestBasicResolutionSetTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneDayOf1440Minutes,
-			start:  "Jul 15 15:15:15",
-			end:    "Aug 16 15:15:15",
+			from:   "Jul 15 15:15:15",
+			to:     "Aug 16 15:15:15",
 			len:    33,
 			first:  "Jul 15 00:00:00",
 			middle: "Jul 31 00:00:00",
@@ -118,7 +118,7 @@ func TestBasicResolutionSetTimestamps(t *testing.T) {
 	}
 
 	for i, e := range table {
-		list := e.res.SetTimestamps(parseTime(e.start), parseTime(e.end))
+		list := e.res.SetTimestamps(parseTime(e.from), parseTime(e.to))
 		assert.Len(t, list, e.len, "%d", i)
 		assert.Equal(t, e.first, list[0].Format(time.Stamp), "%d", i)
 		assert.Equal(t, e.middle, list[e.len/2].Format(time.Stamp), "%d", i)
@@ -129,8 +129,8 @@ func TestBasicResolutionSetTimestamps(t *testing.T) {
 func TestBasicResolutionSampleTimestamps(t *testing.T) {
 	table := []struct {
 		res    Resolution
-		start  string
-		end    string
+		from   string
+		to     string
 		len    int
 		first  string
 		middle string
@@ -138,8 +138,8 @@ func TestBasicResolutionSampleTimestamps(t *testing.T) {
 	}{
 		{
 			res:    OneMinuteOf60Seconds,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 15 15:16:16",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 15 15:16:16",
 			len:    62,
 			first:  "Jul 15 15:15:15",
 			middle: "Jul 15 15:15:46",
@@ -147,8 +147,8 @@ func TestBasicResolutionSampleTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneHourOf60Minutes,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 15 16:16:16",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 15 16:16:16",
 			len:    62,
 			first:  "Jul 15 15:15:00",
 			middle: "Jul 15 15:46:00",
@@ -156,8 +156,8 @@ func TestBasicResolutionSampleTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneDayOf24Hours,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 16 16:16:16",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 16 16:16:16",
 			len:    26,
 			first:  "Jul 15 15:00:00",
 			middle: "Jul 16 04:00:00",
@@ -165,8 +165,8 @@ func TestBasicResolutionSampleTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneMonthOfUpTo31Days,
-			start:  "Jul 15 15:15:15",
-			end:    "Aug 16 16:16:16",
+			from:   "Jul 15 15:15:15",
+			to:     "Aug 16 16:16:16",
 			len:    33,
 			first:  "Jul 15 00:00:00",
 			middle: "Jul 31 00:00:00",
@@ -174,8 +174,8 @@ func TestBasicResolutionSampleTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneHourOf3600Seconds,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 15 15:16:16",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 15 15:16:16",
 			len:    62,
 			first:  "Jul 15 15:15:15",
 			middle: "Jul 15 15:15:46",
@@ -183,8 +183,8 @@ func TestBasicResolutionSampleTimestamps(t *testing.T) {
 		},
 		{
 			res:    OneDayOf1440Minutes,
-			start:  "Jul 15 15:15:15",
-			end:    "Jul 15 16:16:16",
+			from:   "Jul 15 15:15:15",
+			to:     "Jul 15 16:16:16",
 			len:    62,
 			first:  "Jul 15 15:15:00",
 			middle: "Jul 15 15:46:00",
@@ -193,7 +193,7 @@ func TestBasicResolutionSampleTimestamps(t *testing.T) {
 	}
 
 	for i, e := range table {
-		list := e.res.SampleTimestamps(parseTime(e.start), parseTime(e.end))
+		list := e.res.SampleTimestamps(parseTime(e.from), parseTime(e.to))
 		assert.Len(t, list, e.len, "%d", i)
 		assert.Equal(t, e.first, list[0].Format(time.Stamp), "%d", i)
 		assert.Equal(t, e.middle, list[e.len/2].Format(time.Stamp), "%d", i)

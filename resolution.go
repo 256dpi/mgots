@@ -23,14 +23,14 @@ type Resolution interface {
 
 	// SetTimestamps should return a list of all set timestamps for the given
 	// range.
-	SetTimestamps(start time.Time, end time.Time) []time.Time
+	SetTimestamps(first time.Time, last time.Time) []time.Time
 
 	// SampleTimestamp should return the sample timestamp for the given time.
 	SampleTimestamp(t time.Time) time.Time
 
 	// SampleTimestamps should return a list of all sample timestamps for the
 	// given range.
-	SampleTimestamps(start, end time.Time) []time.Time
+	SampleTimestamps(first, last time.Time) []time.Time
 }
 
 // BasicResolution defines the granularity of the saved metrics.
@@ -130,12 +130,12 @@ func (r BasicResolution) SetTimestamp(t time.Time) time.Time {
 }
 
 // SetTimestamps will return a list of all set timestamps for the given range.
-func (r BasicResolution) SetTimestamps(start, end time.Time) []time.Time {
-	firstSet := r.SetTimestamp(start)
+func (r BasicResolution) SetTimestamps(first, last time.Time) []time.Time {
+	firstSet := r.SetTimestamp(first)
 	curSet := firstSet
 	list := make([]time.Time, 0)
 
-	for curSet.Before(end) || curSet.Equal(end) {
+	for curSet.Before(last) || curSet.Equal(last) {
 		list = append(list, curSet)
 
 		switch r {
@@ -165,12 +165,12 @@ func (r BasicResolution) SampleTimestamp(t time.Time) time.Time {
 
 // SampleTimestamps will return a list of all sample timestamps for the given
 // range.
-func (r BasicResolution) SampleTimestamps(start, end time.Time) []time.Time {
-	firstSample := r.SampleTimestamp(start)
+func (r BasicResolution) SampleTimestamps(first, last time.Time) []time.Time {
+	firstSample := r.SampleTimestamp(first)
 	curSample := firstSample
 	list := make([]time.Time, 0)
 
-	for curSample.Before(end) || curSample.Equal(end) {
+	for curSample.Before(last) || curSample.Equal(last) {
 		list = append(list, curSample)
 
 		switch r {
