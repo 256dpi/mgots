@@ -122,7 +122,7 @@ func (r BasicResolution) SetTimestamps(start, end time.Time) []time.Time {
 	curSet := firstSet
 	list := make([]time.Time, 0)
 
-	for curSet.Before(end) {
+	for curSet.Before(end) || curSet.Equal(end) {
 		list = append(list, curSet)
 
 		switch r {
@@ -157,7 +157,7 @@ func (r BasicResolution) SampleTimestamps(start, end time.Time) []time.Time {
 	curSample := firstSample
 	list := make([]time.Time, 0)
 
-	for curSample.Before(end) {
+	for curSample.Before(end) || curSample.Equal(end) {
 		list = append(list, curSample)
 
 		switch r {

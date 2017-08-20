@@ -24,13 +24,13 @@ func TestBasicResolutionSplitAndJoin(t *testing.T) {
 		{r: OneDayOf1440Minutes, s: "Jul 15 00:00:00", k: "915", t: "Jul 15 15:15:00"},
 	}
 
-	for _, e := range table {
+	for i, e := range table {
 		start, key := e.r.Split(ts)
-		assert.Equal(t, e.s, start.Format(time.Stamp))
-		assert.Equal(t, e.k, key)
+		assert.Equal(t, e.s, start.Format(time.Stamp), "%d", i)
+		assert.Equal(t, e.k, key, "%d", i)
 
 		ts2 := e.r.Join(start, key)
-		assert.Equal(t, e.t, ts2.Format(time.Stamp))
+		assert.Equal(t, e.t, ts2.Format(time.Stamp), "%d", i)
 	}
 }
 
@@ -47,61 +47,156 @@ func TestBasicResolutionSetSize(t *testing.T) {
 		{r: OneDayOf1440Minutes, n: 1440},
 	}
 
-	for _, e := range table {
-		assert.Equal(t, e.n, e.r.SetSize())
+	for i, e := range table {
+		assert.Equal(t, e.n, e.r.SetSize(), "%d", i)
 	}
 }
 
 func TestBasicResolutionSetTimestamps(t *testing.T) {
 	table := []struct {
-		r  Resolution
-		rs string
-		re string
-		tf string
-		tc string
-		tl string
-		l  int
+		res    Resolution
+		start  string
+		end    string
+		len    int
+		first  string
+		middle string
+		last   string
 	}{
-		{r: OneMinuteOf60Seconds, rs: "Jul 15 15:15:15", re: "Jul 15 16:16:15", l: 62, tf: "Jul 15 15:15:00", tc: "Jul 15 15:46:00", tl: "Jul 15 16:16:00"},
-		{r: OneHourOf60Minutes, rs: "Jul 15 15:15:15", re: "Jul 16 16:15:15", l: 26, tf: "Jul 15 15:00:00", tc: "Jul 16 04:00:00", tl: "Jul 16 16:00:00"},
-		{r: OneDayOf24Hours, rs: "Jul 15 15:15:15", re: "Aug 16 15:15:15", l: 33, tf: "Jul 15 00:00:00", tc: "Jul 31 00:00:00", tl: "Aug 16 00:00:00"},
-		{r: OneMonthOfUpTo31Days, rs: "Jul 15 15:15:15", re: "Sep 15 15:15:15", l: 3, tf: "Jul  1 00:00:00", tc: "Aug  1 00:00:00", tl: "Sep  1 00:00:00"},
-		{r: OneHourOf3600Seconds, rs: "Jul 15 15:15:15", re: "Jul 16 16:15:15", l: 26, tf: "Jul 15 15:00:00", tc: "Jul 16 04:00:00", tl: "Jul 16 16:00:00"},
-		{r: OneDayOf1440Minutes, rs: "Jul 15 15:15:15", re: "Aug 16 15:15:15", l: 33, tf: "Jul 15 00:00:00", tc: "Jul 31 00:00:00", tl: "Aug 16 00:00:00"},
+		{
+			res:    OneMinuteOf60Seconds,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 15 16:16:15",
+			len:    62,
+			first:  "Jul 15 15:15:00",
+			middle: "Jul 15 15:46:00",
+			last:   "Jul 15 16:16:00",
+		},
+		{
+			res:    OneHourOf60Minutes,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 16 16:15:15",
+			len:    26,
+			first:  "Jul 15 15:00:00",
+			middle: "Jul 16 04:00:00",
+			last:   "Jul 16 16:00:00",
+		},
+		{res: OneDayOf24Hours,
+			start:  "Jul 15 15:15:15",
+			end:    "Aug 16 15:15:15",
+			len:    33,
+			first:  "Jul 15 00:00:00",
+			middle: "Jul 31 00:00:00",
+			last:   "Aug 16 00:00:00",
+		},
+		{
+			res:    OneMonthOfUpTo31Days,
+			start:  "Jul 15 15:15:15",
+			end:    "Sep 15 15:15:15",
+			len:    3,
+			first:  "Jul  1 00:00:00",
+			middle: "Aug  1 00:00:00",
+			last:   "Sep  1 00:00:00",
+		},
+		{
+			res:    OneHourOf3600Seconds,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 16 16:15:15",
+			len:    26,
+			first:  "Jul 15 15:00:00",
+			middle: "Jul 16 04:00:00",
+			last:   "Jul 16 16:00:00",
+		},
+		{
+			res:    OneDayOf1440Minutes,
+			start:  "Jul 15 15:15:15",
+			end:    "Aug 16 15:15:15",
+			len:    33,
+			first:  "Jul 15 00:00:00",
+			middle: "Jul 31 00:00:00",
+			last:   "Aug 16 00:00:00",
+		},
 	}
 
-	for _, e := range table {
-		list := e.r.SetTimestamps(parseTime(e.rs), parseTime(e.re))
-		assert.Len(t, list, e.l)
-		assert.Equal(t, e.tf, list[0].Format(time.Stamp), list[0].Format(time.Stamp))
-		assert.Equal(t, e.tc, list[e.l/2].Format(time.Stamp), list[e.l/2].Format(time.Stamp))
-		assert.Equal(t, e.tl, list[e.l-1].Format(time.Stamp), list[e.l-1].Format(time.Stamp))
+	for i, e := range table {
+		list := e.res.SetTimestamps(parseTime(e.start), parseTime(e.end))
+		assert.Len(t, list, e.len, "%d", i)
+		assert.Equal(t, e.first, list[0].Format(time.Stamp), "%d", i)
+		assert.Equal(t, e.middle, list[e.len/2].Format(time.Stamp), "%d", i)
+		assert.Equal(t, e.last, list[e.len-1].Format(time.Stamp), "%d", i)
 	}
 }
 
 func TestBasicResolutionSampleTimestamps(t *testing.T) {
 	table := []struct {
-		r  Resolution
-		rs string
-		re string
-		tf string
-		tc string
-		tl string
-		l  int
+		res    Resolution
+		start  string
+		end    string
+		len    int
+		first  string
+		middle string
+		last   string
 	}{
-		{r: OneMinuteOf60Seconds, rs: "Jul 15 15:15:15", re: "Jul 15 15:16:16", l: 61, tf: "Jul 15 15:15:15", tc: "Jul 15 15:15:45", tl: "Jul 15 15:16:15"},
-		{r: OneHourOf60Minutes, rs: "Jul 15 15:15:15", re: "Jul 15 16:16:16", l: 62, tf: "Jul 15 15:15:00", tc: "Jul 15 15:46:00", tl: "Jul 15 16:16:00"},
-		{r: OneDayOf24Hours, rs: "Jul 15 15:15:15", re: "Jul 16 16:16:16", l: 26, tf: "Jul 15 15:00:00", tc: "Jul 16 04:00:00", tl: "Jul 16 16:00:00"},
-		{r: OneMonthOfUpTo31Days, rs: "Jul 15 15:15:15", re: "Aug 16 16:16:16", l: 33, tf: "Jul 15 00:00:00", tc: "Jul 31 00:00:00", tl: "Aug 16 00:00:00"},
-		{r: OneHourOf3600Seconds, rs: "Jul 15 15:15:15", re: "Jul 15 15:16:16", l: 61, tf: "Jul 15 15:15:15", tc: "Jul 15 15:15:45", tl: "Jul 15 15:16:15"},
-		{r: OneDayOf1440Minutes, rs: "Jul 15 15:15:15", re: "Jul 15 16:16:16", l: 62, tf: "Jul 15 15:15:00", tc: "Jul 15 15:46:00", tl: "Jul 15 16:16:00"},
+		{
+			res:    OneMinuteOf60Seconds,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 15 15:16:16",
+			len:    62,
+			first:  "Jul 15 15:15:15",
+			middle: "Jul 15 15:15:46",
+			last:   "Jul 15 15:16:16",
+		},
+		{
+			res:    OneHourOf60Minutes,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 15 16:16:16",
+			len:    62,
+			first:  "Jul 15 15:15:00",
+			middle: "Jul 15 15:46:00",
+			last:   "Jul 15 16:16:00",
+		},
+		{
+			res:    OneDayOf24Hours,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 16 16:16:16",
+			len:    26,
+			first:  "Jul 15 15:00:00",
+			middle: "Jul 16 04:00:00",
+			last:   "Jul 16 16:00:00",
+		},
+		{
+			res:    OneMonthOfUpTo31Days,
+			start:  "Jul 15 15:15:15",
+			end:    "Aug 16 16:16:16",
+			len:    33,
+			first:  "Jul 15 00:00:00",
+			middle: "Jul 31 00:00:00",
+			last:   "Aug 16 00:00:00",
+		},
+		{
+			res:    OneHourOf3600Seconds,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 15 15:16:16",
+			len:    62,
+			first:  "Jul 15 15:15:15",
+			middle: "Jul 15 15:15:46",
+			last:   "Jul 15 15:16:16",
+		},
+		{
+			res:    OneDayOf1440Minutes,
+			start:  "Jul 15 15:15:15",
+			end:    "Jul 15 16:16:16",
+			len:    62,
+			first:  "Jul 15 15:15:00",
+			middle: "Jul 15 15:46:00",
+			last:   "Jul 15 16:16:00",
+		},
 	}
 
-	for _, e := range table {
-		list := e.r.SampleTimestamps(parseTime(e.rs), parseTime(e.re))
-		assert.Len(t, list, e.l)
-		assert.Equal(t, e.tf, list[0].Format(time.Stamp), list[0].Format(time.Stamp))
-		assert.Equal(t, e.tc, list[e.l/2].Format(time.Stamp), list[e.l/2].Format(time.Stamp))
-		assert.Equal(t, e.tl, list[e.l-1].Format(time.Stamp), list[e.l-1].Format(time.Stamp))
+	for i, e := range table {
+		list := e.res.SampleTimestamps(parseTime(e.start), parseTime(e.end))
+		assert.Len(t, list, e.len, "%d", i)
+		assert.Equal(t, e.first, list[0].Format(time.Stamp), "%d", i)
+		assert.Equal(t, e.middle, list[e.len/2].Format(time.Stamp), "%d", i)
+		assert.Equal(t, e.last, list[e.len-1].Format(time.Stamp), "%d", i)
 	}
 }
