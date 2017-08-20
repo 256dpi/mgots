@@ -59,7 +59,7 @@ func (r BasicResolution) Join(t time.Time, key string) time.Time {
 	// convert key to integer
 	i, _ := strconv.Atoi(key)
 
-	ts := time.Time{}
+	var ts time.Time
 
 	switch r {
 	case OneMinuteOf60Seconds:
@@ -81,7 +81,7 @@ func (r BasicResolution) Join(t time.Time, key string) time.Time {
 
 // SetSize will return the number of samples per set.
 func (r BasicResolution) SetSize() int {
-	size := 0
+	var size int
 
 	switch r {
 	case OneMinuteOf60Seconds:
@@ -103,7 +103,7 @@ func (r BasicResolution) SetSize() int {
 
 // SetTimestamp will return the set timestamp for the given time.
 func (r BasicResolution) SetTimestamp(t time.Time) time.Time {
-	ts := time.Time{}
+	var ts time.Time
 
 	switch r {
 	case OneMinuteOf60Seconds:
@@ -153,7 +153,7 @@ func (r BasicResolution) SetTimestamps(first, last time.Time) []time.Time {
 
 // SampleKey will return the sample key for given time.
 func (r BasicResolution) SampleKey(t time.Time) string {
-	key := ""
+	var key string
 
 	switch r {
 	case OneMinuteOf60Seconds:
@@ -175,7 +175,7 @@ func (r BasicResolution) SampleKey(t time.Time) string {
 
 // SampleTimestamp will return the sample timestamp for the given time.
 func (r BasicResolution) SampleTimestamp(t time.Time) time.Time {
-	ts := time.Time{}
+	var ts time.Time
 
 	switch r {
 	case OneMinuteOf60Seconds:
