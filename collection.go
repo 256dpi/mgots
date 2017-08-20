@@ -78,11 +78,11 @@ func (c *Collection) upsertSample(t time.Time, metrics map[string]float64, tags 
 	// add statements
 	for name, value := range metrics {
 		update["$set"].(bson.M)["samples."+key+".start"] = c.res.Join(start, key)
-		update["$inc"].(bson.M)["samples."+key+"."+name+".total"] = value
+		update["$inc"].(bson.M)["samples."+key+"."+name+".sum"] = value
 		update["$inc"].(bson.M)["samples."+key+"."+name+".num"] = 1
 		update["$max"].(bson.M)["samples."+key+"."+name+".max"] = value
 		update["$min"].(bson.M)["samples."+key+"."+name+".min"] = value
-		update["$inc"].(bson.M)["total."+name] = value
+		update["$inc"].(bson.M)["sum."+name] = value
 		update["$inc"].(bson.M)["num."+name] = 1
 		update["$max"].(bson.M)["max."+name] = value
 		update["$min"].(bson.M)["min."+name] = value
@@ -156,14 +156,14 @@ func (c *Collection) AggregateSamples(first, last time.Time, metrics []string, t
 		pipeline[5]["$group"].(bson.M)["max_"+name] = bson.M{"$max": "$" + name + ".max"}
 		pipeline[5]["$group"].(bson.M)["min_"+name] = bson.M{"$min": "$" + name + ".min"}
 		pipeline[5]["$group"].(bson.M)["num_"+name] = bson.M{"$sum": "$" + name + ".num"}
-		pipeline[5]["$group"].(bson.M)["total_"+name] = bson.M{"$sum": "$" + name + ".total"}
+		pipeline[5]["$group"].(bson.M)["sum_"+name] = bson.M{"$sum": "$" + name + ".sum"}
 
 		// add project fields
 		pipeline[6]["$project"].(bson.M)["metrics"].(bson.M)[name] = bson.M{
-			"max":   "$max_" + name,
-			"min":   "$min_" + name,
-			"num":   "$num_" + name,
-			"total": "$total_" + name,
+			"max": "$max_" + name,
+			"min": "$min_" + name,
+			"num": "$num_" + name,
+			"sum": "$sum_" + name,
 		}
 	}
 
@@ -215,14 +215,14 @@ func (c *Collection) AggregateSets(first, last time.Time, metrics []string, tags
 		pipeline[1]["$group"].(bson.M)["max_"+name] = bson.M{"$max": "$max." + name}
 		pipeline[1]["$group"].(bson.M)["min_"+name] = bson.M{"$min": "$min." + name}
 		pipeline[1]["$group"].(bson.M)["num_"+name] = bson.M{"$sum": "$num." + name}
-		pipeline[1]["$group"].(bson.M)["total_"+name] = bson.M{"$sum": "$total." + name}
+		pipeline[1]["$group"].(bson.M)["sum_"+name] = bson.M{"$sum": "$sum." + name}
 
 		// add project fields
 		pipeline[2]["$project"].(bson.M)["metrics"].(bson.M)[name] = bson.M{
-			"max":   "$max_" + name,
-			"min":   "$min_" + name,
-			"num":   "$num_" + name,
-			"total": "$total_" + name,
+			"max": "$max_" + name,
+			"min": "$min_" + name,
+			"num": "$num_" + name,
+			"sum": "$sum_" + name,
 		}
 	}
 

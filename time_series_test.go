@@ -16,13 +16,13 @@ func TestTimeSeriesNull1(t *testing.T) {
 			{
 				Start: tl[1],
 				Metrics: map[string]Metric{
-					"value": {Max: 10, Min: 1, Num: 2, Total: 11},
+					"value": {Max: 10, Min: 1, Num: 2, Sum: 11},
 				},
 			},
 			{
 				Start: tl[2],
 				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
+					"value": {Max: 20, Min: 2, Num: 2, Sum: 22},
 				},
 			},
 		},
@@ -35,19 +35,19 @@ func TestTimeSeriesNull1(t *testing.T) {
 			{
 				Start: parseTime("Jul 15 15:15:15"),
 				Metrics: map[string]Metric{
-					"value": {Max: 0, Min: 0, Num: 0, Total: 0},
+					"value": {Max: 0, Min: 0, Num: 0, Sum: 0},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:16"),
 				Metrics: map[string]Metric{
-					"value": {Max: 10, Min: 1, Num: 2, Total: 11},
+					"value": {Max: 10, Min: 1, Num: 2, Sum: 11},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:17"),
 				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
+					"value": {Max: 20, Min: 2, Num: 2, Sum: 22},
 				},
 			},
 		},
@@ -63,14 +63,14 @@ func TestTimeSeriesNull2(t *testing.T) {
 			{
 				Start: tl[0],
 				Metrics: map[string]Metric{
-					"value": {Max: 10, Min: 1, Num: 2, Total: 11},
+					"value": {Max: 10, Min: 1, Num: 2, Sum: 11},
 				},
 			},
 			// <- missing sample
 			{
 				Start: tl[2],
 				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
+					"value": {Max: 20, Min: 2, Num: 2, Sum: 22},
 				},
 			},
 		},
@@ -83,19 +83,19 @@ func TestTimeSeriesNull2(t *testing.T) {
 			{
 				Start: parseTime("Jul 15 15:15:15"),
 				Metrics: map[string]Metric{
-					"value": {Max: 10, Min: 1, Num: 2, Total: 11},
+					"value": {Max: 10, Min: 1, Num: 2, Sum: 11},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:16"),
 				Metrics: map[string]Metric{
-					"value": {Max: 0, Min: 0, Num: 0, Total: 0},
+					"value": {Max: 0, Min: 0, Num: 0, Sum: 0},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:17"),
 				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
+					"value": {Max: 20, Min: 2, Num: 2, Sum: 22},
 				},
 			},
 		},
@@ -111,13 +111,13 @@ func TestTimeSeriesNull3(t *testing.T) {
 			{
 				Start: tl[0],
 				Metrics: map[string]Metric{
-					"value": {Max: 10, Min: 1, Num: 2, Total: 11},
+					"value": {Max: 10, Min: 1, Num: 2, Sum: 11},
 				},
 			},
 			{
 				Start: tl[1],
 				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
+					"value": {Max: 20, Min: 2, Num: 2, Sum: 22},
 				},
 			},
 			// <- missing sample
@@ -131,19 +131,19 @@ func TestTimeSeriesNull3(t *testing.T) {
 			{
 				Start: parseTime("Jul 15 15:15:15"),
 				Metrics: map[string]Metric{
-					"value": {Max: 10, Min: 1, Num: 2, Total: 11},
+					"value": {Max: 10, Min: 1, Num: 2, Sum: 11},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:16"),
 				Metrics: map[string]Metric{
-					"value": {Max: 20, Min: 2, Num: 2, Total: 22},
+					"value": {Max: 20, Min: 2, Num: 2, Sum: 22},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:17"),
 				Metrics: map[string]Metric{
-					"value": {Max: 0, Min: 0, Num: 0, Total: 0},
+					"value": {Max: 0, Min: 0, Num: 0, Sum: 0},
 				},
 			},
 		},

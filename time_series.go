@@ -7,10 +7,10 @@ import (
 
 // A Metric is a single aggregated metric in a sample.
 type Metric struct {
-	Max   float64
-	Min   float64
-	Num   int
-	Total float64
+	Max float64
+	Min float64
+	Num int64
+	Sum float64
 }
 
 // A Sample is a single aggregated sample in a time series.
@@ -24,18 +24,29 @@ type TimeSeries struct {
 	Samples []Sample
 }
 
-// Avg returns the average value for the given time series.
-func (ts *TimeSeries) Avg(metric string) float64 {
-	var total float64
+// Sum returns the sum of all measured values for the given time series.
+func (ts *TimeSeries) Sum(metric string) float64 {
+	var sum float64
 
 	for _, p := range ts.Samples {
-		total += p.Metrics[metric].Total / float64(p.Metrics[metric].Num)
+		sum += p.Metrics[metric].Sum
 	}
 
-	return total / float64(len(ts.Samples))
+	return sum
 }
 
-// Min returns the minimum value for the given time series.
+// Num returns the number of measured values for the given time series.
+func (ts *TimeSeries) Num(metric string) int64 {
+	var sum int64
+
+	for _, p := range ts.Samples {
+		sum += p.Metrics[metric].Num
+	}
+
+	return sum
+}
+
+// Min returns the smallest measured value for the given time series.
 func (ts *TimeSeries) Min(metric string) float64 {
 	min := ts.Samples[0].Metrics[metric].Min
 
@@ -46,7 +57,7 @@ func (ts *TimeSeries) Min(metric string) float64 {
 	return min
 }
 
-// Max returns the maximum value for the given time series.
+// Max returns the largest measured value for the given time series.
 func (ts *TimeSeries) Max(metric string) float64 {
 	max := ts.Samples[0].Metrics[metric].Max
 
@@ -55,6 +66,11 @@ func (ts *TimeSeries) Max(metric string) float64 {
 	}
 
 	return max
+}
+
+// Avg returns the average measured value for the given time series.
+func (ts *TimeSeries) Avg(metric string) float64 {
+	return ts.Sum(metric) / float64(ts.Num(metric))
 }
 
 // Null will return a new TimeSeries that includes samples for the specified

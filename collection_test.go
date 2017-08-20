@@ -28,7 +28,7 @@ func TestCollectionInsert(t *testing.T) {
 			"num": bson.M{
 				"value": int(1),
 			},
-			"total": bson.M{
+			"sum": bson.M{
 				"value": float64(10),
 			},
 			"max": bson.M{
@@ -43,10 +43,10 @@ func TestCollectionInsert(t *testing.T) {
 				"15": bson.M{
 					"start": parseTime("Jul 15 15:15:15"),
 					"value": bson.M{
-						"total": float64(10),
-						"num":   int(1),
-						"max":   float64(10),
-						"min":   float64(10),
+						"sum": float64(10),
+						"num": int(1),
+						"max": float64(10),
+						"min": float64(10),
 					},
 				},
 			},
@@ -82,14 +82,14 @@ func TestCollectionBulkInsert(t *testing.T) {
 				"15": bson.M{
 					"start": parseTime("Jul 15 15:15:15"),
 					"value": bson.M{
-						"total": float64(1),
-						"num":   int(2),
-						"max":   float64(1),
-						"min":   float64(0),
+						"sum": float64(1),
+						"num": int(2),
+						"max": float64(1),
+						"min": float64(0),
 					},
 				},
 			},
-			"total": bson.M{
+			"sum": bson.M{
 				"value": float64(1),
 			},
 			"num": bson.M{
@@ -152,19 +152,19 @@ func TestCollectionAggregateSamples(t *testing.T) {
 			{
 				Start: parseTime("Jul 15 15:15:16"),
 				Metrics: map[string]Metric{
-					"value": {Max: 21, Min: 1, Num: 3, Total: 33},
+					"value": {Max: 21, Min: 1, Num: 3, Sum: 33},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:17"),
 				Metrics: map[string]Metric{
-					"value": {Max: 22, Min: 2, Num: 3, Total: 36},
+					"value": {Max: 22, Min: 2, Num: 3, Sum: 36},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:15:18"),
 				Metrics: map[string]Metric{
-					"value": {Max: 23, Min: 3, Num: 3, Total: 39},
+					"value": {Max: 23, Min: 3, Num: 3, Sum: 39},
 				},
 			},
 		},
@@ -218,19 +218,19 @@ func TestCollectionAggregateSets(t *testing.T) {
 			{
 				Start: parseTime("Jul 15 15:16:00"),
 				Metrics: map[string]Metric{
-					"value": {Max: 21, Min: 1, Num: 3, Total: 33},
+					"value": {Max: 21, Min: 1, Num: 3, Sum: 33},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:17:00"),
 				Metrics: map[string]Metric{
-					"value": {Max: 22, Min: 2, Num: 3, Total: 36},
+					"value": {Max: 22, Min: 2, Num: 3, Sum: 36},
 				},
 			},
 			{
 				Start: parseTime("Jul 15 15:18:00"),
 				Metrics: map[string]Metric{
-					"value": {Max: 23, Min: 3, Num: 3, Total: 39},
+					"value": {Max: 23, Min: 3, Num: 3, Sum: 39},
 				},
 			},
 		},
