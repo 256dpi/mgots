@@ -8,28 +8,30 @@ import (
 // A Resolution specifies the granularity of saved samples and the organization
 // in sets.
 type Resolution interface {
-	// Split should return the timestamp of a set and the key of the sample.
+	// Split should return the set timestamp and sample key for the given time.
 	Split(t time.Time) (time.Time, string)
 
 	// Join should return the timestamp of a single sample based on the timestamp
 	// of a set and the key of the sample.
 	Join(t time.Time, key string) time.Time
 
-	// SetSize should return the total amount of samples per set.
+	// SetSize should return the number of samples per set.
 	SetSize() int
 
 	// SetTimestamp should return the set timestamp for the given time.
 	SetTimestamp(t time.Time) time.Time
 
-	// SetTimestamps should return a list of all set timestamps for the given
-	// range.
+	// SetTimestamps should return a list set timestamps for the given time range.
 	SetTimestamps(first time.Time, last time.Time) []time.Time
+
+	// SampleKey should return the sample key for given time.
+	SampleKey(t time.Time) string
 
 	// SampleTimestamp should return the sample timestamp for the given time.
 	SampleTimestamp(t time.Time) time.Time
 
-	// SampleTimestamps should return a list of all sample timestamps for the
-	// given range.
+	// SampleTimestamps should return a list sample timestamps for the given time
+	// range.
 	SampleTimestamps(first, last time.Time) []time.Time
 }
 
@@ -46,33 +48,9 @@ const (
 	OneDayOf1440Minutes
 )
 
-// Split will return the beginning of a set and the key of the sample.
+// Split will return the set timestamp and sample key for the given time.
 func (r BasicResolution) Split(t time.Time) (time.Time, string) {
-	ts := time.Time{}
-	key := ""
-
-	switch r {
-	case OneMinuteOf60Seconds:
-		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
-		key = strconv.Itoa(t.Second())
-	case OneHourOf60Minutes:
-		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
-		key = strconv.Itoa(t.Minute())
-	case OneDayOf24Hours:
-		ts = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-		key = strconv.Itoa(t.Hour())
-	case OneMonthOfUpTo31Days:
-		ts = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
-		key = strconv.Itoa(t.Day())
-	case OneHourOf3600Seconds:
-		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
-		key = strconv.Itoa(t.Minute()*60 + t.Second())
-	case OneDayOf1440Minutes:
-		ts = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
-		key = strconv.Itoa(t.Hour()*60 + t.Minute())
-	}
-
-	return ts, key
+	return r.SetTimestamp(t), r.SampleKey(t)
 }
 
 // Join will return the timestamp of a single sample based on the start of a
@@ -101,7 +79,7 @@ func (r BasicResolution) Join(t time.Time, key string) time.Time {
 	return ts
 }
 
-// SetSize will return the total amount of samples per set.
+// SetSize will return the number of samples per set.
 func (r BasicResolution) SetSize() int {
 	size := 0
 
@@ -125,11 +103,27 @@ func (r BasicResolution) SetSize() int {
 
 // SetTimestamp will return the set timestamp for the given time.
 func (r BasicResolution) SetTimestamp(t time.Time) time.Time {
-	firstSet, _ := r.Split(t)
-	return firstSet
+	ts := time.Time{}
+
+	switch r {
+	case OneMinuteOf60Seconds:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
+	case OneHourOf60Minutes:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+	case OneDayOf24Hours:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	case OneMonthOfUpTo31Days:
+		ts = time.Date(t.Year(), t.Month(), 1, 0, 0, 0, 0, t.Location())
+	case OneHourOf3600Seconds:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+	case OneDayOf1440Minutes:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	}
+
+	return ts
 }
 
-// SetTimestamps will return a list of all set timestamps for the given range.
+// SetTimestamps will return a list set timestamps for the given time range.
 func (r BasicResolution) SetTimestamps(first, last time.Time) []time.Time {
 	firstSet := r.SetTimestamp(first)
 	curSet := firstSet
@@ -157,14 +151,51 @@ func (r BasicResolution) SetTimestamps(first, last time.Time) []time.Time {
 	return list
 }
 
-// SampleTimestamp will return the sample timestamp for the given time.
-func (r BasicResolution) SampleTimestamp(t time.Time) time.Time {
-	firstSet, setKey := r.Split(t)
-	return r.Join(firstSet, setKey)
+// SampleKey will return the sample key for given time.
+func (r BasicResolution) SampleKey(t time.Time) string {
+	key := ""
+
+	switch r {
+	case OneMinuteOf60Seconds:
+		key = strconv.Itoa(t.Second())
+	case OneHourOf60Minutes:
+		key = strconv.Itoa(t.Minute())
+	case OneDayOf24Hours:
+		key = strconv.Itoa(t.Hour())
+	case OneMonthOfUpTo31Days:
+		key = strconv.Itoa(t.Day())
+	case OneHourOf3600Seconds:
+		key = strconv.Itoa(t.Minute()*60 + t.Second())
+	case OneDayOf1440Minutes:
+		key = strconv.Itoa(t.Hour()*60 + t.Minute())
+	}
+
+	return key
 }
 
-// SampleTimestamps will return a list of all sample timestamps for the given
-// range.
+// SampleTimestamp will return the sample timestamp for the given time.
+func (r BasicResolution) SampleTimestamp(t time.Time) time.Time {
+	ts := time.Time{}
+
+	switch r {
+	case OneMinuteOf60Seconds:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, t.Location())
+	case OneHourOf60Minutes:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
+	case OneDayOf24Hours:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+	case OneMonthOfUpTo31Days:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, t.Location())
+	case OneHourOf3600Seconds:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, t.Location())
+	case OneDayOf1440Minutes:
+		ts = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
+	}
+
+	return ts
+}
+
+// SampleTimestamps will return a list sample timestamps for the given time range.
 func (r BasicResolution) SampleTimestamps(first, last time.Time) []time.Time {
 	firstSample := r.SampleTimestamp(first)
 	curSample := firstSample
