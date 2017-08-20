@@ -66,9 +66,6 @@ func forceUTCMap(m bson.M) bson.M {
 }
 
 func forceUTCTimeSeries(ts *TimeSeries) *TimeSeries {
-	ts.Start = ts.Start.UTC()
-	ts.End = ts.End.UTC()
-
 	for i, s := range ts.Samples {
 		ss := s
 		ss.Start = ss.Start.UTC()

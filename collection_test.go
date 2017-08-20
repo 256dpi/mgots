@@ -148,8 +148,6 @@ func TestCollectionAggregateSamples(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &TimeSeries{
-		Start: parseTime("Jul 15 15:15:16"),
-		End:   parseTime("Jul 15 15:15:18"),
 		Samples: []Sample{
 			{
 				Start: parseTime("Jul 15 15:15:16"),
@@ -216,8 +214,6 @@ func TestCollectionAggregateSets(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, &TimeSeries{
-		Start: parseTime("Jul 15 15:16:15"),
-		End:   parseTime("Jul 15 15:18:15"),
 		Samples: []Sample{
 			{
 				Start: parseTime("Jul 15 15:16:00"),

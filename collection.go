@@ -171,8 +171,6 @@ func (c *Collection) AggregateSamples(start, end time.Time, metrics []string, ta
 	}
 
 	return &TimeSeries{
-		Start:   start,
-		End:     end,
 		Samples: samples,
 	}, nil
 }
@@ -234,8 +232,6 @@ func (c *Collection) AggregateSets(start, end time.Time, metrics []string, tags 
 	}
 
 	return &TimeSeries{
-		Start:   start,
-		End:     end,
 		Samples: samples,
 	}, nil
 }

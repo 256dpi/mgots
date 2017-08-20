@@ -21,8 +21,6 @@ type Sample struct {
 
 // A TimeSeries is a list of samples.
 type TimeSeries struct {
-	Start   time.Time
-	End     time.Time
 	Samples []Sample
 }
 
@@ -70,12 +68,8 @@ func (ts *TimeSeries) Null(timestamps []time.Time, metrics []string) *TimeSeries
 		nullMetrics[name] = Metric{}
 	}
 
-	// allocate new time series
-	newTS := &TimeSeries{
-		Start:   ts.Start,
-		End:     ts.End,
-		Samples: make([]Sample, 0, len(timestamps)),
-	}
+	// allocate samples slice
+	samples := make([]Sample, 0, len(timestamps))
 
 	// prepare counters
 	lastUsedSample := 0
@@ -89,7 +83,7 @@ func (ts *TimeSeries) Null(timestamps []time.Time, metrics []string) *TimeSeries
 		for i := lastUsedSample; i < len(ts.Samples); i++ {
 			// append found sample if matching
 			if ts.Samples[i].Start.Equal(t) {
-				newTS.Samples = append(newTS.Samples, ts.Samples[i])
+				samples = append(samples, ts.Samples[i])
 				lastUsedSample = i
 				added = true
 				break
@@ -103,12 +97,14 @@ func (ts *TimeSeries) Null(timestamps []time.Time, metrics []string) *TimeSeries
 
 		// add null sample if none added
 		if !added {
-			newTS.Samples = append(newTS.Samples, Sample{
+			samples = append(samples, Sample{
 				Start:   t,
 				Metrics: nullMetrics,
 			})
 		}
 	}
 
-	return newTS
+	return &TimeSeries{
+		Samples: samples,
+	}
 }
