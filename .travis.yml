@@ -8,7 +8,7 @@ services:
 addons:
   apt:
     sources:
-      - mongodb-3.4-trusty
+      - mongodb-3.4-precise
     packages:
       - mongodb-org-server
 before_install:
