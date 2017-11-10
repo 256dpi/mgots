@@ -260,11 +260,15 @@ func (c *Collection) matchSets(first, last time.Time, tags bson.M) bson.M {
 // EnsureIndexes will ensure that the necessary indexes have been created. If
 // removeAfter is specified, sets are automatically removed when their start
 // timestamp falls behind the specified duration.
+//
+// Note: It is recommended to create custom indexes that support the exact
+// nature of data and access patterns.
 func (c *Collection) EnsureIndexes(removeAfter time.Duration) error {
 	// ensure start index
 	err := c.coll.EnsureIndex(mgo.Index{
 		Key:         []string{"start"},
 		ExpireAfter: removeAfter,
+		Background:  true,
 	})
 	if err != nil {
 		return err
@@ -272,7 +276,8 @@ func (c *Collection) EnsureIndexes(removeAfter time.Duration) error {
 
 	// ensure tags index
 	err = c.coll.EnsureIndex(mgo.Index{
-		Key: []string{"tags"},
+		Key:        []string{"tags"},
+		Background: true,
 	})
 	if err != nil {
 		return err
