@@ -236,3 +236,11 @@ func TestCollectionAggregateSets(t *testing.T) {
 		},
 	}, forceUTCTimeSeries(ts))
 }
+
+func TestCollectionEnsureIndexes(t *testing.T) {
+	dbc := db.C("test-coll-ensure-indexes")
+	tsc := Wrap(dbc, OneHourOf60Minutes)
+
+	assert.NoError(t, tsc.EnsureIndexes(0))
+	assert.NoError(t, tsc.EnsureIndexes(0))
+}

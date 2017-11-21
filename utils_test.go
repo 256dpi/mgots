@@ -11,7 +11,7 @@ var db *mgo.Database
 
 func init() {
 	// create session
-	sess, err := mgo.Dial("mongodb://localhost/mgots")
+	sess, err := mgo.Dial("mongodb://localhost/test-mgots")
 	if err != nil {
 		panic(err)
 	}
