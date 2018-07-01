@@ -283,5 +283,14 @@ func (c *Collection) EnsureIndexes(removeAfter time.Duration) error {
 		return err
 	}
 
+	// ensure start tags index
+	err = c.coll.EnsureIndex(mgo.Index{
+		Key:        []string{"start", "tags"},
+		Background: true,
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
