@@ -6,7 +6,7 @@
 [![Release](https://img.shields.io/github/release/256dpi/mgots.svg)](https://github.com/256dpi/mgots/releases)
 [![Go Report Card](https://goreportcard.com/badge/github.com/256dpi/mgots)](https://goreportcard.com/report/github.com/256dpi/mgots)
 
-**A wrapper for [mgo](https://github.com/go-mgo/mgo) that turns MongoDB into a time series database.**
+**A wrapper for [mgo](https://github.com/globalsign/mgo) that turns MongoDB into a time series database.**
 
 ## Example
 

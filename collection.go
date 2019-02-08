@@ -5,8 +5,8 @@ package mgots
 import (
 	"time"
 
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+	"github.com/globalsign/mgo"
+	"github.com/globalsign/mgo/bson"
 )
 
 // A Bulk represents an operation that can be used to add multiple metrics at
@@ -140,7 +140,7 @@ func (c *Collection) AggregateSamples(first, last time.Time, metrics []string, t
 				"_id":     false,
 				"start":   "$_id",
 				"metrics": bson.M{
-				// fields added below
+					// fields added below
 				},
 			},
 		},
@@ -199,7 +199,7 @@ func (c *Collection) AggregateSets(first, last time.Time, metrics []string, tags
 				"_id":     false,
 				"start":   "$_id",
 				"metrics": bson.M{
-				// fields added below
+					// fields added below
 				},
 			},
 		},
