@@ -1,10 +1,4 @@
 # mgots
-    
-[![Build Status](https://travis-ci.org/256dpi/mgots.svg?branch=master)](https://travis-ci.org/256dpi/mgots)
-[![Coverage Status](https://coveralls.io/repos/github/256dpi/mgots/badge.svg?branch=master)](https://coveralls.io/github/256dpi/mgots?branch=master)
-[![GoDoc](https://godoc.org/github.com/256dpi/mgots?status.svg)](http://godoc.org/github.com/256dpi/mgots)
-[![Release](https://img.shields.io/github/release/256dpi/mgots.svg)](https://github.com/256dpi/mgots/releases)
-[![Go Report Card](https://goreportcard.com/badge/github.com/256dpi/mgots)](https://goreportcard.com/report/github.com/256dpi/mgots)
 
 **A wrapper for [mgo](https://github.com/globalsign/mgo) that turns MongoDB into a time series database.**
 
